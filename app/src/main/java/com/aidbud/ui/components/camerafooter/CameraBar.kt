@@ -17,6 +17,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.AnimatedVisibility
+
+enum class FlashMode {
+    Auto, On, Off
+}
 
 @Composable
 fun CameraBar(
@@ -24,12 +33,18 @@ fun CameraBar(
     onTakePhoto: () -> Unit, // Separate function for taking a photo
     onStartVideo: () -> Unit, // Function for starting video recording
     onStopVideo: () -> Unit, // Separate function for stopping video recording
-    onSend: () -> Unit // New parameter for SendButton click
+    onSendClick: () -> Unit // New parameter for SendButton click
+    onFlashModeChange: (FlashMode) -> Unit,
+    onCameraFlipClick: () -> Unit,
+    onPhotoAlbumClick: () -> Unit,
+    onTextClick: () -> Unit
 ) {
     val cornerRadius = 48.dp
     val blurRadius = 50f
 
     var isRecordingVideo by remember { mutableStateOf(false) }
+    var currentFlashMode by remember { mutableStateOf(FlashMode.Auto) }
+    var showExtraOptions by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
@@ -56,34 +71,92 @@ fun CameraBar(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center // This centers the RecordButton
         ) {
-            // Place the RecordButton in the center of the CameraBar
-            RecordButton(
-                // Pass a lambda that checks the recording state and calls the appropriate function
-                onClick = {
-                    if (isRecordingVideo) {
-                        onStopVideo() // If recording, stop video
-                        isRecordingVideo = false // Update state
-                        println("CameraBar: Stopping video via RecordButton short press")
-                    } else {
-                        onTakePhoto() // If not recording, take photo
-                        println("CameraBar: Taking photo via RecordButton short press")
-                    }
-                },
-                // When long pressed, start video and update state
-                onHold = {
-                    onStartVideo()
-                    isRecordingVideo = true // Update state
-                    println("CameraBar: Starting video via RecordButton long press")
-                }
-            )
+            if (!showExtraOptions) {
+                Row(
+                    modifier = modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
 
-            // Place the SendButton to the right of the RecordButton
-            SendButton(
+                    PlusButton(
+                        onClick = { showExtraOptions = true } // Toggle expanded options
+                    )
+
+                    CameraFlashButton(
+                        currentFlashMode = currentFlashMode,
+                        onClick = { newMode ->
+                            currentFlashMode = newMode
+                            onFlashModeChange(newMode)
+                        }
+                    )
+
+                    // Place the RecordButton in the center of the CameraBar
+                    RecordButton(
+                        // Pass a lambda that checks the recording state and calls the appropriate function
+                        onClick = {
+                            if (isRecordingVideo) {
+                                onStopVideo() // If recording, stop video
+                                isRecordingVideo = false // Update state
+                                println("CameraBar: Stopping video via RecordButton short press")
+                            } else {
+                                onTakePhoto() // If not recording, take photo
+                                println("CameraBar: Taking photo via RecordButton short press")
+                            }
+                        },
+                        // When long pressed, start video and update state
+                        onHold = {
+                            onStartVideo()
+                            isRecordingVideo = true // Update state
+                            println("CameraBar: Starting video via RecordButton long press")
+                        }
+                    )
+
+                    CameraFlipButton(
+                        onClick = onCameraFlipClick
+                    )
+
+                    // Place the SendButton to the right of the RecordButton
+                    SendButton(
+                        onClick = onSendClick // Pass the send click function
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showExtraOptions,
+                enter = expandHorizontally(expandFrom = Alignment.Start) + fadeIn(),
+                exit = shrinkHorizontally(shrinkTowards = Alignment.Start) + fadeOut(),
                 modifier = Modifier
-                    .align(Alignment.CenterEnd) // Align to the center-right of the CameraBar
-                    .padding(end = 16.dp), // Add some padding from the right edge
-                onClick = onSend // Pass the send click function
-            )
+                    .fillMaxSize() // Occupy the same space as CameraBar
+                    .clip(RoundedCornerShape(cornerRadius)) // Match CameraBar's rounded corners
+                    .background(Color.LightGray.copy(alpha = 0.7f)) // Slightly more opaque background for overlay
+                    .graphicsLayer {
+                        renderEffect = BlurEffect(radiusX = blurRadius, radiusY = blurRadius) // Apply blur to overlay
+                    }
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp), // Padding inside the expanded bar
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Back Button (to close expanded options)
+                    PlusButton( // Reusing PlusButton for simplicity, could be a custom back icon
+                        onClick = { showExtraOptions = false }
+                    )
+
+                    // Photo Album Button
+                    PhotoAlbumButton(
+                        onClick = onPhotoAlbumClick
+                    )
+
+                    // Text Button
+                    TextButton(
+                        onClick = onTextClick
+                    )
+                }
+            }
         }
     }
 }

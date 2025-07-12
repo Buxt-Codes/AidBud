@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.aidbud.aidmm"
+    namespace = "com.aidbud"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.aidmm"
+        applicationId = "com.example.aidbud"
         minSdk = 31
         targetSdk = 36
         versionCode = 1

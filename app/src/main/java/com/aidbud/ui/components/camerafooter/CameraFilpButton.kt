@@ -4,8 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.material3.Icon // Using Material3 Icon for modern Compose apps
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,14 +25,17 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 
+import com.aidbud.R
+
 @Composable
 fun CameraFlipButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val buttonSize = 50.dp // Size of the circular button
-    val iconSizeNormal = 24.dp // Normal size of the camera flip icon
+    val iconSizeNormal = 35.dp // Normal size of the camera flip icon
     val iconSizeContracted = (iconSizeNormal.value * 0.8f).dp // 20% smaller when pressed
+    val flipCameraIcon = ImageVector.vectorResource(id = R.drawable.flip_camera_icon_white)
 
     // State to manage the button's visual feedback
     var isPressed by remember { mutableStateOf(false) }
@@ -68,7 +71,7 @@ fun CameraFlipButton(
         contentAlignment = Alignment.Center // Center the icon within the button
     ) {
         Icon(
-            imageVector = Icons.Filled.Refresh, // The camera flip icon
+            imageVector = flipCameraIcon, // The camera flip icon
             contentDescription = "Flip Camera", // Content description for accessibility
             tint = Color.White, // White color for the icon
             modifier = Modifier.size(animatedIconSize) // Use animated size for the icon
