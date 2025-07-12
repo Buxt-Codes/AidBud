@@ -1,4 +1,4 @@
-package com.aidbud.ui.components.camerafooter
+package com.aidbud.ui.components.cameraoverlay.camerabar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -27,66 +27,73 @@ import androidx.compose.runtime.getValue
 
 import com.aidbud.R
 
-// --- PlusButton Composable (New) ---
 /**
- * A button with a plus icon that expands into additional options.
- * It provides visual and haptic feedback on interaction, similar to other buttons.
+ * A customizable send button with a transparent circular background and a white send icon.
  *
  * @param modifier The modifier to be applied to the button.
  * @param onClick Lambda to be invoked when the button is clicked.
  */
 @Composable
-fun PhotoAlbumButton(
+fun SendButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val buttonSize = 50.dp
-    val iconSizeNormal = 35.dp
-    val iconSizeContracted = (iconSizeNormal.value * 0.8f).dp
-    val photoAlbumIcon = ImageVector.vectorResource(id = R.drawable.photo_library_icon_white)
+    val buttonSize = 50.dp // Size of the circular button
+    val iconSizeNormal = 35.dp // Normal size of the send icon
+    val iconSizeContracted = (iconSizeNormal.value * 0.8f).dp // 20% smaller when pressed
+    val sendIcon = ImageVector.vectorResource(id = R.drawable.send_icon_white)
 
+    // State to manage the button's visual feedback
     var isPressed by remember { mutableStateOf(false) }
+
+    // Haptic feedback controller
     val haptic = LocalHapticFeedback.current
 
+    // Animate the icon size based on pressed state
     val animatedIconSize by animateDpAsState(
         targetValue = if (isPressed) iconSizeContracted else iconSizeNormal,
-        animationSpec = tween(durationMillis = 100), label = "plusIconSizeAnimation"
+        animationSpec = tween(durationMillis = 100), label = "iconSizeAnimation"
     )
 
     Box(
         modifier = modifier
-            .size(buttonSize)
-            .clip(CircleShape)
-            .background(Color.LightGray.copy(alpha = 0.5f))
-            .pointerInput(Unit) {
+            .size(buttonSize) // Set the size of the circular button
+            .clip(CircleShape) // Clip the Box to a circular shape
+            .background(Color.LightGray.copy(alpha = 0.3f)) // Changed to fully transparent background
+            .pointerInput(Unit) { // Use pointerInput for stable gesture detection
                 detectTapGestures(
                     onPress = {
                         isPressed = true
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        println("Plus Button: Press detected")
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress) // Vibrate lightly
+                        println("Send Button: Press detected")
                     },
                     onTap = {
-                        onClick()
-                        isPressed = false
-                        println("Plus Button: Clicked!")
+                        onClick() // Invoke the provided onClick lambda
+                        isPressed = false // Reset press state here as tap is complete
+                        println("Send Button: Clicked!")
                     }
+                    // No onLongPress for SendButton, as it's a simple click
                 )
             },
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center // Center the icon within the button
     ) {
         Icon(
-            imageVector = photoAlbumIcon,
-            contentDescription = "Access Photo Album",
-            tint = Color.White,
-            modifier = Modifier.size(animatedIconSize)
+            imageVector = sendIcon, // The send icon
+            contentDescription = "Send", // Content description for accessibility
+            tint = Color.White, // White color for the icon
+            modifier = Modifier.size(animatedIconSize) // Use animated size for the icon
         )
     }
 }
 
+/**
+ * Preview for the SendButton Composable.
+ * Displays the button on a dark background for better visibility of the transparent white elements.
+ */
 @Preview(showBackground = true, backgroundColor = 0xFF333333) // Dark background for contrast
 @Composable
-fun PhotoAlbumButtonPreview() {
-    PhotoAlbumButton(
+fun SendButtonPreview() {
+    SendButton(
         onClick = { /* TODO: Implement send action */ }
     )
 }

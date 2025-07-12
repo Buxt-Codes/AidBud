@@ -1,4 +1,4 @@
-package com.aidbud.ui.components.camerafooter
+package com.aidbud.ui.components.cameraoverlay.camerabar
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -7,7 +7,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -35,7 +34,7 @@ fun RecordButton(
     onHold: () -> Unit
 ) {
     val outerCircleSize = 60.dp // Size of the larger, transparent circle
-    val innerCircleSize = 55.dp // Size of the smaller, solid white circle
+    val innerCircleSize = 50.dp // Size of the smaller, solid white circle
     val borderWidth = 2.dp // Border width for the outer circle
 
     // State to manage the button's visual feedback

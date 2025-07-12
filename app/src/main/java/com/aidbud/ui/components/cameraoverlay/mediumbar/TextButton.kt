@@ -1,4 +1,4 @@
-package com.aidbud.ui.components.camerafooter
+package com.aidbud.ui.components.cameraoverlay.mediumbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -36,14 +36,14 @@ import com.aidbud.R
  * @param onClick Lambda to be invoked when the button is clicked.
  */
 @Composable
-fun PlusButton(
+fun TextButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val buttonSize = 50.dp
     val iconSizeNormal = 35.dp
     val iconSizeContracted = (iconSizeNormal.value * 0.8f).dp
-    val plusIcon = ImageVector.vectorResource(id = R.drawable.plus_icon_white)
+    val textIcon = ImageVector.vectorResource(id = R.drawable.text_icon_white)
 
     var isPressed by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -75,8 +75,8 @@ fun PlusButton(
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = plusIcon,
-            contentDescription = "Expand Options",
+            imageVector = textIcon,
+            contentDescription = "Input Text",
             tint = Color.White,
             modifier = Modifier.size(animatedIconSize)
         )
@@ -85,8 +85,8 @@ fun PlusButton(
 
 @Preview(showBackground = true, backgroundColor = 0xFF333333) // Dark background for contrast
 @Composable
-fun PlusButtonPreview() {
-    PlusButton(
+fun TextButtonPreview() {
+    TextButton(
         onClick = { /* TODO: Implement send action */ }
     )
 }
