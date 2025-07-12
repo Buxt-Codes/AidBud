@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Aid MM"
+rootProject.name = "AidBud"
 include(":app")
