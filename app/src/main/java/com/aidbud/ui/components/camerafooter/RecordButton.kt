@@ -34,8 +34,8 @@ fun RecordButton(
     onClick: () -> Unit,
     onHold: () -> Unit
 ) {
-    val outerCircleSize = 50.dp // Size of the larger, transparent circle
-    val innerCircleSize = 40.dp // Size of the smaller, solid white circle
+    val outerCircleSize = 60.dp // Size of the larger, transparent circle
+    val innerCircleSize = 55.dp // Size of the smaller, solid white circle
     val borderWidth = 2.dp // Border width for the outer circle
 
     // State to manage the button's visual feedback

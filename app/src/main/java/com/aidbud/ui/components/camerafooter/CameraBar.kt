@@ -1,6 +1,7 @@
 package com.aidbud.ui.components.camerafooter
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -17,8 +18,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
-import com.aidbud.ui.components.general.SendButton
-
 @Composable
 fun CameraBar(
     modifier: Modifier = Modifier, // Add modifier parameter for external control
@@ -34,9 +33,11 @@ fun CameraBar(
 
     Box(
         modifier = Modifier
-            .widthIn(min = 200.dp, max = 400.dp) // Minimum width of 200dp
-            .fillMaxWidth(0.7f) // Fills 70% of the parent's width
-            .height(65.dp), // Fixed height of 65dp
+            .widthIn(min = 310.dp, max = 350.dp) // Minimum width of 200dp
+            .fillMaxWidth(0.3f) // Fills 70% of the parent's width
+            .height(80.dp) // Fixed height of 65dp
+            .clip(RoundedCornerShape(cornerRadius)) // Apply rounded corners to the entire bar
+            .border(0.5.dp, Color.White, RoundedCornerShape(cornerRadius)), // Add the white border here
         contentAlignment = Alignment.Center // This centers the content (RecordButton) horizontally and vertically
     ) {
         // Inner Box for the background and blur effect
@@ -45,7 +46,7 @@ fun CameraBar(
             modifier = Modifier
                 .fillMaxSize() // Fill the size of the parent Box (CameraBar)
                 .clip(RoundedCornerShape(cornerRadius)) // Apply rounded corners to the background
-                .background(Color.LightGray.copy(alpha = 0.5f)) // Semi-transparent background
+                .background(Color.Gray.copy(alpha = 0.5f)) // Semi-transparent background
                 .graphicsLayer {
                     renderEffect = BlurEffect(radiusX = blurRadius, radiusY = blurRadius) // Apply blur here
                 }

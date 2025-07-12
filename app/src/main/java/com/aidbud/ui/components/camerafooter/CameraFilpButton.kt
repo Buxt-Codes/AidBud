@@ -1,12 +1,11 @@
-package com.aidbud.ui.components.general
+package com.aidbud.ui.components.camerafooter
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon // Using Material3 Icon for modern Compose apps
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,19 +25,13 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 
-/**
- * A customizable send button with a transparent circular background and a white send icon.
- *
- * @param modifier The modifier to be applied to the button.
- * @param onClick Lambda to be invoked when the button is clicked.
- */
 @Composable
-fun SendButton(
+fun CameraFlipButton(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     val buttonSize = 50.dp // Size of the circular button
-    val iconSizeNormal = 45.dp // Normal size of the send icon
+    val iconSizeNormal = 24.dp // Normal size of the camera flip icon
     val iconSizeContracted = (iconSizeNormal.value * 0.8f).dp // 20% smaller when pressed
 
     // State to manage the button's visual feedback
@@ -50,48 +43,43 @@ fun SendButton(
     // Animate the icon size based on pressed state
     val animatedIconSize by animateDpAsState(
         targetValue = if (isPressed) iconSizeContracted else iconSizeNormal,
-        animationSpec = tween(durationMillis = 100), label = "iconSizeAnimation"
+        animationSpec = tween(durationMillis = 100), label = "cameraFlipIconSizeAnimation"
     )
 
     Box(
         modifier = modifier
             .size(buttonSize) // Set the size of the circular button
             .clip(CircleShape) // Clip the Box to a circular shape
-            .background(Color.Transparent) // Changed to fully transparent background
+            .background(Color.LightGray.copy(alpha = 0.5f)) // Light gray with 0.5 transparency
             .pointerInput(Unit) { // Use pointerInput for stable gesture detection
                 detectTapGestures(
                     onPress = {
                         isPressed = true
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress) // Vibrate lightly
-                        println("Send Button: Press detected")
+                        println("Camera Flip Button: Press detected")
                     },
                     onTap = {
                         onClick() // Invoke the provided onClick lambda
                         isPressed = false // Reset press state here as tap is complete
-                        println("Send Button: Clicked!")
+                        println("Camera Flip Button: Clicked!")
                     }
-                    // No onLongPress for SendButton, as it's a simple click
                 )
             },
         contentAlignment = Alignment.Center // Center the icon within the button
     ) {
         Icon(
-            imageVector = Icons.Filled.Send, // The send icon
-            contentDescription = "Send", // Content description for accessibility
+            imageVector = Icons.Filled.Refresh, // The camera flip icon
+            contentDescription = "Flip Camera", // Content description for accessibility
             tint = Color.White, // White color for the icon
             modifier = Modifier.size(animatedIconSize) // Use animated size for the icon
         )
     }
 }
 
-/**
- * Preview for the SendButton Composable.
- * Displays the button on a dark background for better visibility of the transparent white elements.
- */
 @Preview(showBackground = true, backgroundColor = 0xFF333333) // Dark background for contrast
 @Composable
-fun SendButtonPreview() {
-    SendButton(
+fun CameraFlipButtonPreview() {
+    CameraFlipButton(
         onClick = { /* TODO: Implement send action */ }
     )
 }
