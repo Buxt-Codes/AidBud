@@ -13,13 +13,6 @@ data class Conversation(
     @ColumnInfo(name = "title")
     val title: String,
 
-    // Store images/videos as a JSON string of paths/URIs
-    @ColumnInfo(name = "current_images_videos")
-    val currentImagesAndVideos: String?, // Nullable if optional
-
-    @ColumnInfo(name = "current_text_input")
-    val currentTextInput: String?, // Nullable if optional
-
     // lastUpdated will be set programmatically before insertion/update
     @ColumnInfo(name = "last_updated")
     val lastUpdated: Long // Timestamp (e.g., System.currentTimeMillis())

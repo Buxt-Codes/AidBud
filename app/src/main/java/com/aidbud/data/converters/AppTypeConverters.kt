@@ -1,5 +1,7 @@
 package com.aidbud.data.converters
 
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -18,5 +20,18 @@ object AppTypeConverters {
         if (json == null) return null
         val type = object : TypeToken<List<String>>() {}.type
         return Gson().fromJson(json, type)
+    }
+
+    @TypeConverter
+    fun fromUriList(list: List<Uri>?): String? {
+        return list?.map { it.toString() }?.let { Gson().toJson(it) }
+    }
+
+    @TypeConverter
+    fun toUriList(json: String?): List<Uri>? {
+        if (json == null) return null
+        val type = object : TypeToken<List<String>>() {}.type
+        val list = Gson().fromJson<List<String>>(json, type)
+        return list.map { it.toUri() }
     }
 }
