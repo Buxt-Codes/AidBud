@@ -1,5 +1,6 @@
 package com.aidbud.ui.components.cameraoverlay
 
+import android.os.CountDownTimer
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
@@ -49,6 +50,7 @@ import androidx.compose.foundation.layout.padding
 import com.aidbud.ui.components.cameraoverlay.camerabar.FlashMode
 import com.aidbud.ui.components.cameraoverlay.camerabar.CameraBar
 import com.aidbud.data.settings.SettingsViewModel
+import com.aidbud.data.cache.draftmessage.GlobalCacheViewModel
 
 fun saveToAlbum(context: Context, sourceUri: Uri, displayName: String, isVideo: Boolean) {
     val resolver = context.contentResolver
@@ -88,11 +90,11 @@ fun saveToAlbum(context: Context, sourceUri: Uri, displayName: String, isVideo: 
 fun CameraOverlay(
     modifier: Modifier = Modifier,
     settingsViewModel: SettingsViewModel,
+    cacheViewModel: GlobalCacheViewModel,
     onPhotoTaken: (Uri) -> Unit,
-    onVideoTaken: (Uri) -> Unit,
-    onSendClick: () -> Unit,
-    onPlusClick: () -> Unit,
+    onVideoTaken: (Uri) -> Unit
 ) {
+    val currentConversationId: Int = cacheViewModel.getCurrentConversationId()!!
     val saveInAlbum by settingsViewModel.saveInAlbum.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -144,6 +146,8 @@ fun CameraOverlay(
 
     // State for video recording
     var recording: Recording? by remember { mutableStateOf(null) }
+    var recordingTimer: CountDownTimer? = null
+    var isRecording by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
 
     // --- CameraX Binding Logic ---
@@ -218,9 +222,10 @@ fun CameraOverlay(
         // and handle the actual camera operations.
 
         // Function to handle taking a photo
-        val onTakePhoto: () -> Unit = {
+        val onTakePhoto: () -> Unit = takePhoto@{
             if (!hasCameraPermission) {
                 Toast.makeText(context, "Camera permission not granted.", Toast.LENGTH_SHORT).show()
+                return@takePhoto
             } else {
 
                 val name = SimpleDateFormat(
@@ -263,14 +268,24 @@ fun CameraOverlay(
         }
 
         // Function to handle starting video recording
-        val onStartVideo: () -> Unit = {
+        val onStartVideo: () -> Unit = startVideo@{
             if (!hasCameraPermission) {
                 Toast.makeText(context, "Camera and Audio permissions not granted.", Toast.LENGTH_SHORT).show()
+                return@startVideo
             } else {
 
                 // Stop any existing recording
                 recording?.stop()
                 recording = null
+                recordingTimer?.cancel()
+                recordingTimer = null
+                isRecording = false
+
+                val durationLeftMillis = cacheViewModel.getDurationLeft(currentConversationId)
+                if (durationLeftMillis <= 0L) {
+                    Toast.makeText(context, "You have reached the video recording limit.", Toast.LENGTH_SHORT).show()
+                    return@startVideo
+                }
 
                 val name = SimpleDateFormat(
                     "yyyy-MM-dd-HH-mm-ss-SSS",
@@ -296,6 +311,7 @@ fun CameraOverlay(
                     )
                     .build()
 
+                isRecording = true
                 recording = videoCapture.output
                     .prepareRecording(context, mediaStoreOutput)
                     .withAudioEnabled() // Enable audio recording
@@ -305,10 +321,25 @@ fun CameraOverlay(
                                 Log.d("CameraScreen", "Video recording started.")
                                 Toast.makeText(context, "Recording started!", Toast.LENGTH_SHORT)
                                     .show()
+                                recordingTimer = object : CountDownTimer(durationLeftMillis, 1000) {
+                                    override fun onTick(millisUntilFinished: Long) {
+                                        // Optional: update UI with remaining seconds
+                                    }
+
+                                    override fun onFinish() {
+                                        // Time's up - stop recording automatically
+                                        if (isRecording) {
+                                            Toast.makeText(context, "Max recording duration reached. Stopping...", Toast.LENGTH_SHORT).show()
+                                            recording?.stop()
+                                            recordingTimer = null
+                                        }
+                                    }
+                                }.start()
                             }
 
                             is VideoRecordEvent.Finalize -> {
                                 if (!recordEvent.hasError()) {
+                                    isRecording = false
                                     val msg =
                                         "Video capture succeeded: ${recordEvent.outputResults.outputUri}"
                                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -318,6 +349,7 @@ fun CameraOverlay(
                                         saveToAlbum(context, videoUri, name, true)
                                     }
                                 } else {
+                                    isRecording = false
                                     recording?.close()
                                     recording = null
                                     val msg = "Video capture failed: ${recordEvent.error}"
@@ -347,11 +379,6 @@ fun CameraOverlay(
             }
         }
 
-        // Function to handle sending (dummy)
-        val onSendClick: () -> Unit = {
-            Toast.makeText(context, "Send button clicked!", Toast.LENGTH_SHORT).show()
-        }
-
         // Function to handle flash mode change
         val onFlashModeChange: (FlashMode) -> Unit = { mode ->
             currentFlashMode = mode // Update the state with the enum value
@@ -377,13 +404,12 @@ fun CameraOverlay(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(10.dp),
+            isRecording = isRecording,
             onTakePhoto = onTakePhoto,
             onStartVideo = onStartVideo,
             onStopVideo = onStopVideo,
-            onSendClick = onSendClick,
             onFlashModeChange = onFlashModeChange,
-            onCameraFlipClick = onCameraFlipClick,
-            onPlusClick = onPlusClick
+            onCameraFlipClick = onCameraFlipClick
         )
     }
 }

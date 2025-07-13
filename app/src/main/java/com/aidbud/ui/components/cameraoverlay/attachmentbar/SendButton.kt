@@ -1,4 +1,4 @@
-package com.aidbud.ui.components.cameraoverlay.camerabar
+package com.aidbud.ui.components.cameraoverlay.attachmentbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

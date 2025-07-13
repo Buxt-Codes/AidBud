@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 fun RecordButton(
     modifier: Modifier = Modifier,
     // Renamed parameters for clarity, matching the CameraBar's usage
+    isRecording: Boolean,
     onClick: () -> Unit,
     onHold: () -> Unit
 ) {
@@ -39,7 +40,6 @@ fun RecordButton(
 
     // State to manage the button's visual feedback
     var isPressed by remember { mutableStateOf(false) } // True when finger is down
-    var isRecording by remember { mutableStateOf(false) } // True when video recording is active
 
     // Haptic feedback controller
     val haptic = LocalHapticFeedback.current
@@ -83,7 +83,6 @@ fun RecordButton(
                         if (isRecording) {
                             // If currently recording, a tap stops the video
                             onClick() // Call function to stop video
-                            isRecording = false // Stop recording state
                             println("Record Button: Short press (Stop Video)")
                         } else {
                             // If not recording, a tap takes a photo
@@ -95,7 +94,6 @@ fun RecordButton(
                     onLongPress = {
                         // When a long press/hold occurs
                         onHold() // Call function to start video
-                        isRecording = true // Set recording state to true
                         isPressed = false // Stop contraction immediately when hold starts
                         println("Record Button: Long press (Start Video)")
                     }
@@ -126,6 +124,7 @@ fun RecordButtonUpdatedPreview() {
         contentAlignment = Alignment.Center
     ) {
         RecordButton(
+            isRecording = false,
             onClick = { println("Preview: Photo/Stop Video action!") },
             onHold = { println("Preview: Start Video action!") }
         )

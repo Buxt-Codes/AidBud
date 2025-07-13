@@ -25,18 +25,16 @@ enum class FlashMode {
 @Composable
 fun CameraBar(
     modifier: Modifier = Modifier, // Add modifier parameter for external control
+    isRecording: Boolean,
     onTakePhoto: () -> Unit, // Separate function for taking a photo
     onStartVideo: () -> Unit, // Function for starting video recording
     onStopVideo: () -> Unit, // Separate function for stopping video recording
-    onSendClick: () -> Unit, // New parameter for SendButton click
     onFlashModeChange: (FlashMode) -> Unit,
-    onCameraFlipClick: () -> Unit,
-    onPlusClick: () -> Unit
+    onCameraFlipClick: () -> Unit
 ) {
     val cornerRadius = 48.dp
     val blurRadius = 50f
 
-    var isRecordingVideo by remember { mutableStateOf(false) }
     var currentFlashMode by remember { mutableStateOf(FlashMode.Auto) }
 
     Box(
@@ -70,10 +68,6 @@ fun CameraBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                PlusButton(
-                    onClick = onPlusClick // Toggle expanded options
-                )
-
                 CameraFlashButton(
                     currentFlashMode = currentFlashMode,
                     onClick = { newMode ->
@@ -84,11 +78,11 @@ fun CameraBar(
 
                 // Place the RecordButton in the center of the CameraBar
                 RecordButton(
+                    isRecording = isRecording,
                     // Pass a lambda that checks the recording state and calls the appropriate function
                     onClick = {
-                        if (isRecordingVideo) {
+                        if (isRecording) {
                             onStopVideo() // If recording, stop video
-                            isRecordingVideo = false // Update state
                             println("CameraBar: Stopping video via RecordButton short press")
                         } else {
                             onTakePhoto() // If not recording, take photo
@@ -98,7 +92,6 @@ fun CameraBar(
                     // When long pressed, start video and update state
                     onHold = {
                         onStartVideo()
-                        isRecordingVideo = true // Update state
                         println("CameraBar: Starting video via RecordButton long press")
                     }
                 )
@@ -107,10 +100,6 @@ fun CameraBar(
                     onClick = onCameraFlipClick
                 )
 
-                // Place the SendButton to the right of the RecordButton
-                SendButton(
-                    onClick = onSendClick // Pass the send click function
-                )
             }
         }
     }
@@ -128,13 +117,12 @@ fun CameraBarPreview() {
     ) {
         // Calls your CameraBar Composable to be displayed on the white background
         CameraBar(
+            isRecording = false,
             onTakePhoto = { println("Preview: Photo taken!") },
             onStartVideo = { println("Preview: Video started!") },
             onStopVideo = { println("Preview: Video stopped!") },
-            onSendClick = { println("Preview: Send Button Click!") },
             onFlashModeChange = { mode -> println("Preview: Flash mode changed to $mode") },
-            onCameraFlipClick = { println("Preview: Camera flipped!") },
-            onPlusClick = { println("Preview: Plus button clicked!") }
+            onCameraFlipClick = { println("Preview: Camera flipped!") }
         )
     }
 }
