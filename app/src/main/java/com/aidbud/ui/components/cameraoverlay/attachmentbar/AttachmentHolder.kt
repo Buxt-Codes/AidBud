@@ -23,9 +23,9 @@ import com.aidbud.R
 
 @Composable
 fun AttachmentThumbnail(
+    modifier: Modifier = Modifier,
     uri: Uri,
-    onDelete: (Uri) -> Unit,
-    modifier: Modifier = Modifier
+    onDelete: (Uri -> Unit,
 ) {
     Box(
         modifier = modifier
