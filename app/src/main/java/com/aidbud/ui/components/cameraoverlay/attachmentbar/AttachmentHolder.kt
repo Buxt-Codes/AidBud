@@ -19,6 +19,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage // For loading images from Uri
 
+import com.aidbud.R
+
 @Composable
 fun AttachmentThumbnail(
     uri: Uri,
@@ -46,16 +48,16 @@ fun AttachmentThumbnail(
             onClick = { onDelete(uri) },
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(x = 4.dp, y = (-4).dp) // Slightly offset to be outside the corner
-                .size(24.dp) // Smaller size for the icon button
-                .clip(RoundedCornerShape(4.dp))
-                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f)) // Semi-transparent background
+                .offset(x = 4.dp, y = (-4).dp)
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(Color.White) // solid white circle
         ) {
             Icon(
-                imageVector = Icons.Default.Delete,
+                painter = painterResource(id = R.drawable.remove_icon_black),
                 contentDescription = "Delete attachment",
-                tint = MaterialTheme.colorScheme.onErrorContainer, // Icon color
-                modifier = Modifier.size(16.dp) // Smaller icon
+                tint = Color.Black, // apply black tint
+                modifier = Modifier.size(8.dp)
             )
         }
     }
