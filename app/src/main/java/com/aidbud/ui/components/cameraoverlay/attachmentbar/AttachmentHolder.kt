@@ -25,7 +25,7 @@ import com.aidbud.R
 fun AttachmentThumbnail(
     modifier: Modifier = Modifier,
     uri: Uri,
-    onDelete: (Uri -> Unit,
+    onDelete: (Uri) -> Unit,
 ) {
     Box(
         modifier = modifier
