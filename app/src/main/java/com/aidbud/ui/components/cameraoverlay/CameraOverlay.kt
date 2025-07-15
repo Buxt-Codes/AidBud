@@ -52,50 +52,15 @@ import com.aidbud.ui.components.cameraoverlay.camerabar.CameraBar
 import com.aidbud.data.settings.SettingsViewModel
 import com.aidbud.data.cache.draftmessage.GlobalCacheViewModel
 
-fun saveToAlbum(context: Context, sourceUri: Uri, displayName: String, isVideo: Boolean) {
-    val resolver = context.contentResolver
-    val folderName = "Pictures/AidBud"
-    val mimeType = if (isVideo) "video/mp4" else "image/jpeg"
-
-    val contentValues = ContentValues().apply {
-        put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
-        put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-        put(MediaStore.MediaColumns.RELATIVE_PATH, folderName)
-        put(MediaStore.MediaColumns.IS_PENDING, 1)
-    }
-
-    val collectionUri = if (isVideo) {
-        MediaStore.Video.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-    } else {
-        MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-    }
-
-    val destUri = resolver.insert(collectionUri, contentValues) ?: return
-
-    resolver.openInputStream(sourceUri).use { inputStream ->
-        resolver.openOutputStream(destUri).use { outputStream ->
-            if (inputStream != null && outputStream != null) {
-                inputStream.copyTo(outputStream)
-            }
-        }
-    }
-
-    contentValues.clear()
-    contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
-    resolver.update(destUri, contentValues, null, null)
-}
-
-
 @Composable
 fun CameraOverlay(
     modifier: Modifier = Modifier,
+    conversationId: Int,
     settingsViewModel: SettingsViewModel,
     cacheViewModel: GlobalCacheViewModel,
     onPhotoTaken: (Uri) -> Unit,
     onVideoTaken: (Uri) -> Unit
 ) {
-    val currentConversationId: Int = cacheViewModel.getCurrentConversationId()!!
-    val saveInAlbum by settingsViewModel.saveInAlbum.collectAsState()
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraExecutor: ExecutorService = remember { Executors.newSingleThreadExecutor() }
@@ -238,7 +203,21 @@ fun CameraOverlay(
                 ) // Using internal storage for simplicity
                 val photoUri = Uri.fromFile(photoFile)
 
-                val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile).build()
+                // 1. Create ContentValues for the MediaStore entry
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, "IMG_${name}.jpg")
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                    // Define the subfolder within the standard Pictures directory.
+                    // Make sure "Pictures/AidBud" matches the saveToAlbum helper's folderName if you use it for consistency.
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/AidBud")
+                }
+
+                // 2. Build the OutputFileOptions to save directly to MediaStore
+                val outputOptions = ImageCapture.OutputFileOptions.Builder(
+                    context.contentResolver,
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, // Use EXTERNAL_CONTENT_URI for public gallery
+                    contentValues
+                ).build()
 
                 imageCapture.takePicture(
                     outputOptions,
@@ -258,9 +237,6 @@ fun CameraOverlay(
                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             Log.d("CameraScreen", msg)
                             onPhotoTaken(photoUri)
-                            if (saveInAlbum) {
-                                saveToAlbum(context, photoUri, name, false)
-                            }
                         }
                     }
                 )
@@ -281,7 +257,7 @@ fun CameraOverlay(
                 recordingTimer = null
                 isRecording = false
 
-                val durationLeftMillis = cacheViewModel.getDurationLeft(currentConversationId)
+                val durationLeftMillis = cacheViewModel.getDurationLeft(conversationId)
                 if (durationLeftMillis <= 0L) {
                     Toast.makeText(context, "You have reached the video recording limit.", Toast.LENGTH_SHORT).show()
                     return@startVideo
@@ -345,9 +321,6 @@ fun CameraOverlay(
                                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                     Log.d("CameraScreen", msg)
                                     onVideoTaken(videoUri)
-                                    if (saveInAlbum) {
-                                        saveToAlbum(context, videoUri, name, true)
-                                    }
                                 } else {
                                     isRecording = false
                                     recording?.close()

@@ -1,59 +1,60 @@
 package com.aidbud.data.settings
 
 import android.content.Context
-import androidx.datastore.preferences.core.*
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
-private const val DATASTORE_NAME = "app_settings"
+// Define the DataStore instance as an extension property on Context
+// This should be a top-level property in a file accessible by your DataStore class.
+val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-// Extension property on Context to create DataStore instance
-val Context.dataStore by preferencesDataStore(name = DATASTORE_NAME)
+/**
+ * Manages application settings using Jetpack DataStore.
+ * This class is a singleton and its dependencies are injected by Hilt.
+ */
+@Singleton
+class SettingsDataStore @Inject constructor(@ApplicationContext private val context: Context) {
 
-object SettingsDataStore {
+    private val SAVE_IN_ALBUM_KEY = booleanPreferencesKey("save_in_album")
+    private val SAVE_CONVERSATION_KEY = booleanPreferencesKey("save_conversation")
+    private val CONVERSATION_LIMIT_KEY = intPreferencesKey("conversation_limit")
 
-    // Preference keys
-    private val SAVE_IN_ALBUM = booleanPreferencesKey("save_in_album")
-    private val SAVE_CONVERSATIONS = booleanPreferencesKey("save_conversations")
-    private val CONVERSATIONS_LIMIT = intPreferencesKey("conversations_limit")
+    val saveInAlbum: Flow<Boolean> = context.settingsDataStore.data.map { preferences ->
+        preferences[SAVE_IN_ALBUM_KEY] ?: false
+    }
 
-    // Save In Album
-    fun getSaveInAlbum(context: Context): Flow<Boolean> {
-        return context.dataStore.data.map { prefs ->
-            prefs[SAVE_IN_ALBUM] ?: false
+    val saveConversation: Flow<Boolean> = context.settingsDataStore.data.map { preferences ->
+        preferences[SAVE_CONVERSATION_KEY] ?: true
+    }
+
+    val conversationLimit: Flow<Int> = context.settingsDataStore.data.map { preferences ->
+        preferences[CONVERSATION_LIMIT_KEY] ?: 100
+    }
+
+    suspend fun setSaveInAlbum(enabled: Boolean) {
+        context.settingsDataStore.edit { settings ->
+            settings[SAVE_IN_ALBUM_KEY] = enabled
         }
     }
 
-    suspend fun setSaveInAlbum(context: Context, value: Boolean) {
-        context.dataStore.edit { prefs ->
-            prefs[SAVE_IN_ALBUM] = value
+    suspend fun setSaveConversation(enabled: Boolean) {
+        context.settingsDataStore.edit { settings ->
+            settings[SAVE_CONVERSATION_KEY] = enabled
         }
     }
 
-    // Save Conversation
-    fun getSaveConversation(context: Context): Flow<Boolean> {
-        return context.dataStore.data.map { prefs ->
-            prefs[SAVE_CONVERSATIONS] ?: true // default true
-        }
-    }
-
-    suspend fun setSaveConversation(context: Context, value: Boolean) {
-        context.dataStore.edit { prefs ->
-            prefs[SAVE_CONVERSATIONS] = value
-        }
-    }
-
-    // Conversation Limit
-    fun getConversationLimit(context: Context): Flow<Int> {
-        return context.dataStore.data.map { prefs ->
-            prefs[CONVERSATIONS_LIMIT] ?: 100 // default limit
-        }
-    }
-
-    suspend fun setConversationLimit(context: Context, limit: Int) {
-        context.dataStore.edit { prefs ->
-            prefs[CONVERSATIONS_LIMIT] = limit
+    suspend fun setConversationLimit(limit: Int) {
+        context.settingsDataStore.edit { settings ->
+            settings[CONVERSATION_LIMIT_KEY] = limit
         }
     }
 }

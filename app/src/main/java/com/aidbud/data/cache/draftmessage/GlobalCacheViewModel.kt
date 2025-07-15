@@ -6,22 +6,42 @@ import android.net.Uri
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
-class GlobalCacheViewModel : ViewModel() {
+/**
+ * ViewModel for managing global cache, specifically draft messages with attachments.
+ * Context is injected via Hilt for media operations.
+ */
+@HiltViewModel
+class GlobalCacheViewModel @Inject constructor(
+    @ApplicationContext private val applicationContext: Context // Inject Context via Hilt
+) : ViewModel() {
+
     private val MAX_VIDEO_DURATION_MILLIS = 30_000L
 
-    private var _currentConversationId: Int? = null
+    // Using mutableStateMapOf directly for Compose observation
     private val _drafts = mutableStateMapOf<Int, DraftMessage>()
     val drafts: SnapshotStateMap<Int, DraftMessage> = _drafts
+
+    // Using a simple mutableStateOf for current conversation ID, as it's not persisted
+    private var _currentConversationId: Int? by mutableStateOf(null)
+    val currentConversationId: Int?
+        get() = _currentConversationId
 
     fun updateText(conversationId: Int, text: String) {
         val current = _drafts[conversationId] ?: DraftMessage()
         _drafts[conversationId] = current.copy(text = text)
     }
 
-    fun addAttachment(context: Context, conversationId: Int, uri: Uri) {
+    fun addAttachment(conversationId: Int, uri: Uri) {
         val current = _drafts[conversationId] ?: DraftMessage()
-        val durationMillis = getVideoDurationMillis(context, uri)
+        val durationMillis = getVideoDurationMillis(uri) // Use injected context
 
         val newAttachments = current.attachments + uri
         val newDuration = current.totalVideoDurationMillis + durationMillis
@@ -32,9 +52,9 @@ class GlobalCacheViewModel : ViewModel() {
         )
     }
 
-    fun removeAttachment(context: Context, conversationId: Int, uri: Uri) {
+    fun removeAttachment(conversationId: Int, uri: Uri) {
         val current = _drafts[conversationId] ?: DraftMessage()
-        val durationMillis = getVideoDurationMillis(context, uri)
+        val durationMillis = getVideoDurationMillis(uri) // Use injected context
 
         val newAttachments = current.attachments - uri
         val newDuration = (current.totalVideoDurationMillis - durationMillis).coerceAtLeast(0L)
@@ -63,16 +83,15 @@ class GlobalCacheViewModel : ViewModel() {
         return (MAX_VIDEO_DURATION_MILLIS - used).coerceAtLeast(0L)
     }
 
-    fun getCurrentConversationId(): Int? = _currentConversationId
-
     fun setCurrentConversationId(conversationId: Int) {
         _currentConversationId = conversationId
     }
 
-    private fun getVideoDurationMillis(context: Context, uri: Uri): Long {
+    private fun getVideoDurationMillis(uri: Uri): Long {
         return try {
             val retriever = MediaMetadataRetriever()
-            retriever.setDataSource(context, uri)
+            // Use the injected applicationContext here
+            retriever.setDataSource(applicationContext, uri)
             val durationStr = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
             retriever.release()
             durationStr?.toLongOrNull() ?: 0L
