@@ -26,20 +26,20 @@ class GlobalCacheViewModel @Inject constructor(
     private val MAX_VIDEO_DURATION_MILLIS = 30_000L
 
     // Using mutableStateMapOf directly for Compose observation
-    private val _drafts = mutableStateMapOf<Int, DraftMessage>()
-    val drafts: SnapshotStateMap<Int, DraftMessage> = _drafts
+    private val _drafts = mutableStateMapOf<Long, DraftMessage>()
+    val drafts: SnapshotStateMap<Long, DraftMessage> = _drafts
 
     // Using a simple mutableStateOf for current conversation ID, as it's not persisted
-    private var _currentConversationId: Int? by mutableStateOf(null)
-    val currentConversationId: Int?
+    private var _currentConversationId: Long? by mutableStateOf(null)
+    val currentConversationId: Long?
         get() = _currentConversationId
 
-    fun updateText(conversationId: Int, text: String) {
+    fun updateText(conversationId: Long, text: String) {
         val current = _drafts[conversationId] ?: DraftMessage()
         _drafts[conversationId] = current.copy(text = text)
     }
 
-    fun addAttachment(conversationId: Int, uri: Uri) {
+    fun addAttachment(conversationId: Long, uri: Uri) {
         val current = _drafts[conversationId] ?: DraftMessage()
         val durationMillis = getVideoDurationMillis(uri) // Use injected context
 
@@ -52,7 +52,7 @@ class GlobalCacheViewModel @Inject constructor(
         )
     }
 
-    fun removeAttachment(conversationId: Int, uri: Uri) {
+    fun removeAttachment(conversationId: Long, uri: Uri) {
         val current = _drafts[conversationId] ?: DraftMessage()
         val durationMillis = getVideoDurationMillis(uri) // Use injected context
 
@@ -65,25 +65,25 @@ class GlobalCacheViewModel @Inject constructor(
         )
     }
 
-    fun getDraft(conversationId: Int): DraftMessage {
+    fun getDraft(conversationId: Long): DraftMessage {
         return _drafts[conversationId] ?: DraftMessage()
     }
 
-    fun clearDraft(conversationId: Int) {
+    fun clearDraft(conversationId: Long) {
         _drafts.remove(conversationId)
     }
 
-    fun getAttachmentCount(conversationId: Int): Int {
+    fun getAttachmentCount(conversationId: Long): Int {
         val draft = _drafts[conversationId]
         return draft?.attachments?.size ?: 0
     }
 
-    fun getDurationLeft(conversationId: Int): Long {
+    fun getDurationLeft(conversationId: Long): Long {
         val used = _drafts[conversationId]?.totalVideoDurationMillis ?: 0L
         return (MAX_VIDEO_DURATION_MILLIS - used).coerceAtLeast(0L)
     }
 
-    fun setCurrentConversationId(conversationId: Int) {
+    fun setCurrentConversationId(conversationId: Long) {
         _currentConversationId = conversationId
     }
 

@@ -57,22 +57,31 @@ fun CameraFlashButton(
             .size(buttonSize) // Set the size of the circular button
             .clip(CircleShape) // Clip the Box to a circular shape
             .background(Color.LightGray.copy(alpha = 0.5f)) // Light gray with 0.5 transparency
-            .pointerInput(Unit) { // Use pointerInput for stable gesture detection
+            .pointerInput(currentFlashMode) { // Use pointerInput for stable gesture detection
                 detectTapGestures(
                     onPress = {
                         isPressed = true
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress) // Vibrate lightly
-                        println("Camera Flip Button: Press detected")
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        println("CameraFlashButton: Press detected. Internal state 'isPressed' = $isPressed")
                     },
                     onTap = {
                         val nextFlashMode = when (currentFlashMode) {
-                            FlashMode.Auto -> FlashMode.On
-                            FlashMode.On -> FlashMode.Off
-                            FlashMode.Off -> FlashMode.Auto
+                            FlashMode.Auto -> {
+                                println("CameraFlashButton: WHEN currentFlashMode was Auto -> next is On")
+                                FlashMode.On
+                            }
+                            FlashMode.On -> {
+                                println("CameraFlashButton: WHEN currentFlashMode was On -> next is Off")
+                                FlashMode.Off
+                            }
+                            FlashMode.Off -> {
+                                println("CameraFlashButton: WHEN currentFlashMode was Off -> next is Auto")
+                                FlashMode.Auto
+                            }
                         }
-                        onClick(nextFlashMode) // Invoke the provided onClick lambda
-                        isPressed = false // Reset press state here as tap is complete
-                        println("Camera Flip Button: Clicked!")
+                        onClick(nextFlashMode)
+                        isPressed = false
+                        println("CameraFlashButton: Clicked! nextFlashMode = $nextFlashMode. Internal state 'isPressed' = $isPressed")
                     }
                 )
             },

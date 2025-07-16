@@ -71,8 +71,10 @@ fun CameraBar(
                 CameraFlashButton(
                     currentFlashMode = currentFlashMode,
                     onClick = { newMode ->
+                        println("CameraBar: onClick received newMode = $newMode")
                         currentFlashMode = newMode
                         onFlashModeChange(newMode)
+                        println("CameraBar: AFTER update, currentFlashMode is $currentFlashMode")
                     }
                 )
 

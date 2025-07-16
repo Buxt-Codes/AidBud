@@ -55,11 +55,13 @@ import com.aidbud.data.cache.draftmessage.GlobalCacheViewModel
 @Composable
 fun CameraOverlay(
     modifier: Modifier = Modifier,
-    conversationId: Int,
+    conversationId: Long,
     settingsViewModel: SettingsViewModel,
     cacheViewModel: GlobalCacheViewModel,
     onPhotoTaken: (Uri) -> Unit,
-    onVideoTaken: (Uri) -> Unit
+    onVideoTaken: (Uri) -> Unit,
+    onStartRecording: () -> Unit,
+    onStopRecording: () -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -297,6 +299,7 @@ fun CameraOverlay(
                                 Log.d("CameraScreen", "Video recording started.")
                                 Toast.makeText(context, "Recording started!", Toast.LENGTH_SHORT)
                                     .show()
+                                onStartRecording()
                                 recordingTimer = object : CountDownTimer(durationLeftMillis, 1000) {
                                     override fun onTick(millisUntilFinished: Long) {
                                         // Optional: update UI with remaining seconds
@@ -307,7 +310,9 @@ fun CameraOverlay(
                                         if (isRecording) {
                                             Toast.makeText(context, "Max recording duration reached. Stopping...", Toast.LENGTH_SHORT).show()
                                             recording?.stop()
+                                            isRecording = false
                                             recordingTimer = null
+                                            onStopRecording()
                                         }
                                     }
                                 }.start()
@@ -321,6 +326,7 @@ fun CameraOverlay(
                                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                     Log.d("CameraScreen", msg)
                                     onVideoTaken(videoUri)
+                                    onStopRecording()
                                 } else {
                                     isRecording = false
                                     recording?.close()
@@ -328,6 +334,7 @@ fun CameraOverlay(
                                     val msg = "Video capture failed: ${recordEvent.error}"
                                     Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                                     Log.e("CameraScreen", msg)
+                                    onStopRecording()
                                 }
                             }
 

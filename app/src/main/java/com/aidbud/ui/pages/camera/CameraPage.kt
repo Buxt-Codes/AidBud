@@ -70,7 +70,7 @@ fun CameraPage(
 
     // Correct way to get the current draft: directly call the getter from the ViewModel.
     // Compose will automatically recompose when `cacheViewModel.drafts` changes for this conversationId.
-    val currentDraft = cacheViewModel.getDraft(conversationId.toInt())
+    val currentDraft = cacheViewModel.getDraft(conversationId)
 
     // Local UI state for recording status (not managed by cacheViewModel as it's ephemeral)
     var isRecording by remember { mutableStateOf(false) }
@@ -103,12 +103,12 @@ fun CameraPage(
                 cacheViewModel = cacheViewModel,
                 onPhotoTaken = { uri ->
                     // Add photo URI to the draft in cacheViewModel
-                    cacheViewModel.addAttachment(conversationId.toInt(), uri)
+                    cacheViewModel.addAttachment(conversationId, uri)
                     println("Photo captured and added to draft for conversation $conversationId: $uri")
                 },
                 onVideoTaken = { uri ->
                     // Add video URI to the draft in cacheViewModel
-                    cacheViewModel.addAttachment(conversationId.toInt(), uri)
+                    cacheViewModel.addAttachment(conversationId, uri)
                     isRecording = false // Assuming video taken means recording stops
                     println("Video captured and added to draft for conversation $conversationId: $uri")
                 },
@@ -138,7 +138,7 @@ fun CameraPage(
                             println("Message with attachments sent for conversation $conversationId: ${currentDraft.attachments.size} attachments")
 
                             // Clear the draft after sending
-                            cacheViewModel.clearDraft(conversationId.toInt())
+                            cacheViewModel.clearDraft(conversationId)
                             println("Draft cleared for conversation $conversationId")
 
                             // Example of using settingsViewModel
@@ -158,7 +158,7 @@ fun CameraPage(
                 },
                 onAttachmentDeleteClick = { uriToDelete ->
                     // Handle attachment deletion from the draft in cacheViewModel
-                    cacheViewModel.removeAttachment(conversationId.toInt(), uriToDelete)
+                    cacheViewModel.removeAttachment(conversationId, uriToDelete)
                     println("Attachment deleted from draft for conversation $conversationId: $uriToDelete")
                 }
             )
