@@ -70,7 +70,7 @@ fun RecordButton(
             .clip(CircleShape) // Clip the entire button area to a circle
             .border(borderWidth, Color.White, CircleShape) // White border for the outer circle
             .background(Color.Transparent) // Transparent white background for the outer circle
-            .pointerInput(Unit) { // Use pointerInput for stable gesture detection
+            .pointerInput(isRecording) { // Use pointerInput for stable gesture detection
                 detectTapGestures(
                     onPress = {
                         // When finger touches down
