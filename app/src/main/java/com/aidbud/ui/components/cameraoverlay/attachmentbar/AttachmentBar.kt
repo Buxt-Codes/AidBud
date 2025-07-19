@@ -28,6 +28,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 
 import com.aidbud.data.cache.draftmessage.GlobalCacheViewModel
 import com.aidbud.data.settings.SettingsViewModel
@@ -47,11 +49,13 @@ fun AttachmentBar(
     blurRadius: Float = 50f // Default blur radius
 ) {
     val context = LocalContext.current
+    val MAX_ATTACHMENTS = 4
+    val scrollState = rememberScrollState()
 
     Box(
         modifier = modifier
-            .widthIn(min = 310.dp, max = 350.dp) // Minimum and maximum width constraints
-            .fillMaxWidth(0.3f) // Fills 30% of the parent's width, clamped by widthIn
+            .widthIn(min = 310.dp, max = 400.dp) // Minimum and maximum width constraints
+            .fillMaxWidth(0.9f) // Fills 30% of the parent's width, clamped by widthIn
             .height(100.dp) // Fixed height
             .clip(RoundedCornerShape(cornerRadius)) // Apply rounded corners to the entire bar
             .border(0.5.dp, Color.White, RoundedCornerShape(cornerRadius)), // Add the white border
@@ -77,7 +81,7 @@ fun AttachmentBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                    .padding(horizontal = 25.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Start
             ) {
@@ -97,17 +101,28 @@ fun AttachmentBar(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // Attachment Thumbnails Row (Takes up remaining space)
-                Row(
+                Box( // This Box takes the weighted space in the main Row
                     modifier = Modifier
-                        .weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .weight(1f) // Takes all available horizontal space in the parent Row
+                        .fillMaxHeight(0.8f) // Fills the height of the parent Row
                 ) {
-                    attachments.take(4).forEach { uri ->
-                        AttachmentThumbnail(
-                            uri = uri,
-                            onDelete = onAttachmentDeleteClick
-                        )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxHeight() // Respects the height of its parent Box
+                            .horizontalScroll(scrollState), // Makes the Row horizontally scrollable
+                        horizontalArrangement = Arrangement.spacedBy(8.dp), // Spacing between slots
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Only iterate over actual attachments
+                        // Use .take(MAX_ATTACHMENTS) if you still want to limit how many are displayed visually
+                        attachments.forEach { uri ->
+                            AttachmentThumbnail(
+                                modifier = Modifier
+                                    .fillMaxHeight(), // Fills height, which will then determine width via aspectRatio(1f)
+                                uri = uri,
+                                onDelete = onAttachmentDeleteClick
+                            )
+                        }
                     }
                 }
 

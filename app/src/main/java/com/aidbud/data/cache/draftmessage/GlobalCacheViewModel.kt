@@ -35,34 +35,30 @@ class GlobalCacheViewModel @Inject constructor(
         get() = _currentConversationId
 
     fun updateText(conversationId: Long, text: String) {
-        val current = _drafts[conversationId] ?: DraftMessage()
-        _drafts[conversationId] = current.copy(text = text)
+        val current = _drafts[conversationId] ?: DraftMessage().also {
+            _drafts[conversationId] = it
+        }
+        current.text = text
     }
 
     fun addAttachment(conversationId: Long, uri: Uri) {
-        val current = _drafts[conversationId] ?: DraftMessage()
-        val durationMillis = getVideoDurationMillis(uri) // Use injected context
+        val current = _drafts[conversationId] ?: DraftMessage().also {
+            _drafts[conversationId] = it
+        }
 
-        val newAttachments = current.attachments + uri
-        val newDuration = current.totalVideoDurationMillis + durationMillis
+        val durationMillis = getVideoDurationMillis(uri)
 
-        _drafts[conversationId] = current.copy(
-            attachments = newAttachments,
-            totalVideoDurationMillis = newDuration
-        )
+        current.attachments.add(uri)
+        current.totalVideoDurationMillis += durationMillis
     }
 
     fun removeAttachment(conversationId: Long, uri: Uri) {
-        val current = _drafts[conversationId] ?: DraftMessage()
-        val durationMillis = getVideoDurationMillis(uri) // Use injected context
+        val current = _drafts[conversationId] ?: return
+        val durationMillis = getVideoDurationMillis(uri)
 
-        val newAttachments = current.attachments - uri
-        val newDuration = (current.totalVideoDurationMillis - durationMillis).coerceAtLeast(0L)
-
-        _drafts[conversationId] = current.copy(
-            attachments = newAttachments,
-            totalVideoDurationMillis = newDuration
-        )
+        current.attachments.remove(uri)
+        current.totalVideoDurationMillis =
+            (current.totalVideoDurationMillis - durationMillis).coerceAtLeast(0L)
     }
 
     fun getDraft(conversationId: Long): DraftMessage {

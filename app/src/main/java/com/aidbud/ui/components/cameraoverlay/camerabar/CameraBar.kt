@@ -39,8 +39,8 @@ fun CameraBar(
 
     Box(
         modifier = Modifier
-            .widthIn(min = 310.dp, max = 350.dp) // Minimum width of 200dp
-            .fillMaxWidth(0.3f) // Fills 70% of the parent's width
+            .widthIn(min = 310.dp, max = 400.dp) // Minimum width of 200dp
+            .fillMaxWidth(0.9f) // Fills 70% of the parent's width
             .height(80.dp) // Fixed height of 65dp
             .clip(RoundedCornerShape(cornerRadius)) // Apply rounded corners to the entire bar
             .border(0.5.dp, Color.White, RoundedCornerShape(cornerRadius)), // Add the white border here
@@ -63,7 +63,9 @@ fun CameraBar(
             contentAlignment = Alignment.Center // This centers the RecordButton
         ) {
             Row(
-                modifier = modifier.fillMaxSize(),
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 25.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {

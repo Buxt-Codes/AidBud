@@ -204,6 +204,12 @@ fun CameraOverlay(
                 return@takePhoto // Use return@label to exit the lambda
             }
 
+            val currentDraft = cacheViewModel.getDraft(conversationId)
+            if (currentDraft.attachments.size >= 4) {
+                Toast.makeText(context, "You have reached the attachment limit.", Toast.LENGTH_SHORT).show()
+                return@takePhoto
+            }
+
             val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.US).format(System.currentTimeMillis())
 
             // Create ContentValues for the MediaStore entry
@@ -270,6 +276,12 @@ fun CameraOverlay(
             recordingTimer?.cancel()
             recordingTimer = null
             isRecording = false // Reset state before starting a new one
+
+            val currentDraft = cacheViewModel.getDraft(conversationId)
+            if (currentDraft.attachments.size >= 4) {
+                Toast.makeText(context, "You have reached the attachment limit.", Toast.LENGTH_SHORT).show()
+                return@startVideo
+            }
 
             val durationLeftMillis = cacheViewModel.getDurationLeft(conversationId)
             if (durationLeftMillis <= 0L) {

@@ -15,9 +15,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage // For loading images from Uri
+import androidx.compose.foundation.clickable
 
 import com.aidbud.R
 
@@ -29,11 +31,10 @@ fun AttachmentThumbnail(
 ) {
     Box(
         modifier = modifier
-            .width(48.dp)  // Rectangular width
-            .height(64.dp) // Rectangular height
+            .aspectRatio(3f / 4f) // Makes the box square, its width will match its height
+            .fillMaxHeight() // Makes the box fill the height available in the parent row
             .clip(RoundedCornerShape(8.dp)) // Rounded corners for the thumbnail
             .background(MaterialTheme.colorScheme.surfaceVariant) // Background color for placeholder/loading
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(8.dp)) // Border
     ) {
         // AsyncImage from Coil to load the image from the Uri
         AsyncImage(
@@ -44,20 +45,21 @@ fun AttachmentThumbnail(
         )
 
         // Trash bin icon at the top-right
-        IconButton(
-            onClick = { onDelete(uri) },
+        Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(x = 4.dp, y = (-4).dp)
-                .size(10.dp)
+                .padding(4.dp)                 // Space from edges
+                .size(20.dp)                   // Circle size
                 .clip(CircleShape)
-                .background(Color.White) // solid white circle
+                .background(Color.Black)      // Black background
+                .clickable { onDelete(uri) }, // Click handler
+            contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.remove_icon_black),
+                painter = painterResource(id = R.drawable.delete_icon_white),
                 contentDescription = "Delete attachment",
-                tint = Color.Black, // apply black tint
-                modifier = Modifier.size(8.dp)
+                tint = Color.Unspecified, // Keep original icon tint (white)
+                modifier = Modifier.size(16.dp) // Icon size inside circle
             )
         }
     }
