@@ -26,6 +26,8 @@ import coil.compose.AsyncImage // For loading images from Uri
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 
 import com.aidbud.data.cache.draftmessage.GlobalCacheViewModel
 import com.aidbud.data.settings.SettingsViewModel
@@ -39,11 +41,13 @@ fun AttachmentBar(
     isRecording: Boolean,
     attachments: List<Uri>,
     onSendClick: () -> Unit,
-    onPlusClick: () -> Unit,
+    onPlusClick: (Int) -> Unit,
     onAttachmentDeleteClick: (Uri) -> Unit,
     cornerRadius: Dp = 50.dp, // Default corner radius
     blurRadius: Float = 50f // Default blur radius
 ) {
+    val context = LocalContext.current
+
     Box(
         modifier = modifier
             .widthIn(min = 310.dp, max = 350.dp) // Minimum and maximum width constraints
@@ -79,7 +83,15 @@ fun AttachmentBar(
             ) {
                 // Plus Button (Far Left)
                 PlusButton(
-                    onClick = onPlusClick
+                    onClick = {
+                        val currentAttachmentCount = attachments.size
+                        if (currentAttachmentCount >= 4) {
+                            Toast.makeText(context, "Maximum 4 images allowed", Toast.LENGTH_SHORT)
+                                .show()
+                        } else {
+                            onPlusClick(currentAttachmentCount) // Pass current count to parent
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))

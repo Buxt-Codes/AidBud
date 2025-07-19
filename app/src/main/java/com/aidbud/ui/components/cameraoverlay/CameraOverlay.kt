@@ -399,17 +399,20 @@ fun CameraOverlay(
 
         // Only show the CameraBar if permissions are granted
         if (hasCameraPermission) {
-            CameraBar(
+            Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 16.dp),
-                isRecording = isRecording,
-                onTakePhoto = onTakePhoto,
-                onStartVideo = onStartVideo,
-                onStopVideo = onStopVideo,
-                onFlashModeChange = onFlashModeChange,
-                onCameraFlipClick = onCameraFlipClick
-            )
+                    .padding(bottom = 10.dp) // or 16.dp if you prefer
+            ) {
+                CameraBar(
+                    isRecording = isRecording,
+                    onTakePhoto = onTakePhoto,
+                    onStartVideo = onStartVideo,
+                    onStopVideo = onStopVideo,
+                    onFlashModeChange = onFlashModeChange,
+                    onCameraFlipClick = onCameraFlipClick
+                )
+            }
         }
     }
 }

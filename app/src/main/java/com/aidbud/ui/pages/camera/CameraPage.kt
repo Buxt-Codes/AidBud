@@ -120,7 +120,7 @@ fun CameraPage(
             AttachmentBar(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 150.dp),
+                    .padding(bottom = 100.dp),
                 settingsViewModel = settingsViewModel,
                 cacheViewModel = cacheViewModel,
                 isRecording = isRecording,
