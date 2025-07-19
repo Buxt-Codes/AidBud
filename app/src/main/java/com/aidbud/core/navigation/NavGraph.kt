@@ -40,7 +40,7 @@ fun AppNavHost(
             LaunchedEffect(Unit) { // This effect runs only once when the composable enters composition
                 coroutineScope.launch {
                     // Create a new conversation and get its ID
-                    val newConversationId = aidBudViewModel.insertConversation("New App Session Chat")
+                    val newConversationId = aidBudViewModel.insertConversation("New Conversation")
 
                     // Navigate to the camera_screen, passing the new conversation ID
                     // popUpTo ensures that 'initial_setup' is removed from the back stack,
@@ -60,7 +60,7 @@ fun AppNavHost(
         ) { backStackEntry ->
             // Extract the conversationId from the navigation arguments
             val conversationId = backStackEntry.arguments?.getLong("conversationId") ?: -1L
-
+            cacheViewModel.setCurrentConversationId(conversationId)
             // Pass all necessary ViewModels and the conversationId to the CameraPage
             CameraPage(
                 conversationId = conversationId, // Pass the ID

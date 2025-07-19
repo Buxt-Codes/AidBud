@@ -35,44 +35,36 @@ import com.aidbud.R
  */
 @Composable
 fun MenuButton(
-    navController: NavController,
-    destinationRoute: String,
-    boxSize: Dp = 64.dp, // Default size for the circular box
-    iconSize: Dp = 36.dp, // Default size for the icon
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    iconSize: Dp = 25.dp, // Default size for the icon
 ) {
     val menuIcon = ImageVector.vectorResource(id = R.drawable.home_icon_white)
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth() // Ensure the column takes full width to center content
+    Box(
+        modifier = Modifier
+            .size(60.dp) // Set the size of the circular box
+            .clip(CircleShape) // Clip the box to a circular shape
+            .background(Color.LightGray.copy(alpha = 0.5f)) // Translucent gray bubble background
+            .clickable {
+                // Navigate to the specified destination route when clicked
+                onClick()
+            },
+        contentAlignment = Alignment.Center // Center the icon inside the box
     ) {
-        Box(
-            modifier = Modifier
-                .size(boxSize) // Set the size of the circular box
-                .clip(CircleShape) // Clip the box to a circular shape
-                .background(Color.Transparent) // Make the background transparent
-                .clickable {
-                    // Navigate to the specified destination route when clicked
-                    navController.navigate(destinationRoute)
-                },
-            contentAlignment = Alignment.Center // Center the icon inside the box
-        ) {
-            Icon(
-                imageVector = menuIcon, // Use the Home icon
-                contentDescription = "Home Button",
-                modifier = Modifier.size(iconSize) // Set the size of the icon
-            )
-        }
+        Icon(
+            imageVector = menuIcon,
+            contentDescription = "Menu Button",
+            tint = Color.White, // Assuming the icon should be white as per 'home_icon_white'
+            modifier = Modifier.size(iconSize) // Set the size of the icon
+        )
     }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun MenuButtonPreview() {
-    // Create a dummy NavController for the preview
-    val dummyNavController = rememberNavController()
     MenuButton(
-        navController = dummyNavController,
-        destinationRoute = "some_destination"
+        onClick = { /* TODO: Implement send action */ }
     )
 }

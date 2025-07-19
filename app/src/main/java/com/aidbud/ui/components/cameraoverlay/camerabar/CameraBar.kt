@@ -1,5 +1,9 @@
 package com.aidbud.ui.components.cameraoverlay.camerabar
 
+import androidx.compose.animation.AnimatedVisibility // Import for AnimatedVisibility
+import androidx.compose.animation.animateContentSize // Import for animateContentSize
+import androidx.compose.animation.fadeIn // Import for fadeIn
+import androidx.compose.animation.fadeOut // Import for fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -39,8 +43,8 @@ fun CameraBar(
 
     Box(
         modifier = Modifier
-            .widthIn(min = 310.dp, max = 400.dp) // Minimum width of 200dp
-            .fillMaxWidth(0.9f) // Fills 70% of the parent's width
+            .widthIn(min = 310.dp, max = 400.dp) // Original min/max width when not recording
+            .fillMaxWidth(0.9f) // Original fill width when not recording
             .height(80.dp) // Fixed height of 65dp
             .clip(RoundedCornerShape(cornerRadius)) // Apply rounded corners to the entire bar
             .border(0.5.dp, Color.White, RoundedCornerShape(cornerRadius)), // Add the white border here
@@ -52,7 +56,7 @@ fun CameraBar(
             modifier = Modifier
                 .fillMaxSize() // Fill the size of the parent Box (CameraBar)
                 .clip(RoundedCornerShape(cornerRadius)) // Apply rounded corners to the background
-                .background(Color.Gray.copy(alpha = 0.5f)) // Semi-transparent background
+                .background(Color.LightGray.copy(alpha = 0.5f)) // Semi-transparent background
                 .graphicsLayer {
                     renderEffect = BlurEffect(radiusX = blurRadius, radiusY = blurRadius) // Apply blur here
                 }
@@ -64,21 +68,25 @@ fun CameraBar(
         ) {
             Row(
                 modifier = modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 25.dp, vertical = 4.dp),
+                    .fillMaxSize(),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                CameraFlashButton(
-                    currentFlashMode = currentFlashMode,
-                    onClick = { newMode ->
-                        println("CameraBar: onClick received newMode = $newMode")
-                        currentFlashMode = newMode
-                        onFlashModeChange(newMode)
-                        println("CameraBar: AFTER update, currentFlashMode is $currentFlashMode")
-                    }
-                )
+                AnimatedVisibility(
+                    visible = !isRecording,
+                    enter = fadeIn(), // Fade in when becoming visible
+                    exit = fadeOut() // Fade out when becoming invisible
+                ) {
+                    CameraFlashButton(
+                        currentFlashMode = currentFlashMode,
+                        onClick = { newMode ->
+                            currentFlashMode = newMode
+                            onFlashModeChange(newMode)
+                        }
+                    )
+                }
+
 
                 // Place the RecordButton in the center of the CameraBar
                 RecordButton(
@@ -100,9 +108,15 @@ fun CameraBar(
                     }
                 )
 
-                CameraFlipButton(
-                    onClick = onCameraFlipClick
-                )
+                AnimatedVisibility(
+                    visible = !isRecording,
+                    enter = fadeIn(), // Fade in when becoming visible
+                    exit = fadeOut() // Fade out when becoming invisible
+                ) {
+                    CameraFlipButton(
+                        onClick = onCameraFlipClick
+                    )
+                }
 
             }
         }

@@ -47,11 +47,16 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.util.UUID
 import androidx.compose.runtime.derivedStateOf
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.animation.fadeIn // Import fadeIn
+import androidx.compose.animation.fadeOut // Import fadeOut
 
 import com.aidbud.ui.components.cameraoverlay.CameraOverlay
 import com.aidbud.ui.components.cameraoverlay.attachmentbar.AttachmentBar
 import com.aidbud.util.attachments.getVideoDuration
 import com.aidbud.data.cache.draftmessage.DraftMessage
+import com.aidbud.ui.components.cameraoverlay.headerbar.HeaderBar
+import androidx.compose.animation.AnimatedVisibility
 
 /**
  * Composable screen for the Camera functionality.
@@ -86,6 +91,11 @@ fun CameraPage(
             cacheViewModel.drafts[conversationId] ?: DraftMessage()
         }
     }
+
+    val currentConversation by remember(conversationId) {
+        viewModel.getConversationById(conversationId)
+    }.collectAsStateWithLifecycle(initialValue = null)
+
     // Local UI state for recording status (not managed by cacheViewModel as it's ephemeral)
     var isRecording by remember { mutableStateOf(false) }
 
@@ -171,15 +181,6 @@ fun CameraPage(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text("Camera") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -208,60 +209,75 @@ fun CameraPage(
             )
 
             // AttachmentBar above CameraOverlay, 150dp from bottom center
-            AttachmentBar(
+            AnimatedVisibility( // Wrap AttachmentBar with AnimatedVisibility
+                visible = !isRecording, // Visible when not recording
+                enter = fadeIn(), // Fade in when becoming visible
+                exit = fadeOut(), // Fade out when becoming invisible
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 100.dp),
-                settingsViewModel = settingsViewModel,
-                cacheViewModel = cacheViewModel,
-                isRecording = isRecording,
-                attachments = currentDraft.attachments, // Display attachments from cacheViewModel
-                onSendClick = {
-                    // Handle send action: insert message with attachments into database
-                    coroutineScope.launch {
-                        if (conversationId != -1L) {
-                            viewModel.insertMessage(
-                                conversationId = conversationId,
-                                role = "user",
-                                text = currentDraft.text.ifBlank { null }, // Use cached text, or null if empty
-                                photosAndVideos = currentDraft.attachments.ifEmpty { null }
-                            )
-                            println("Message with attachments sent for conversation $conversationId: ${currentDraft.attachments.size} attachments")
-
-                            // Clear the draft after sending
-                            cacheViewModel.clearDraft(conversationId)
-                            println("Draft cleared for conversation $conversationId")
-
-                        } else {
-                            println("Error: Invalid conversation ID to send message to.")
+                    .padding(bottom = 100.dp)
+            ) {
+                AttachmentBar(
+                    settingsViewModel = settingsViewModel,
+                    cacheViewModel = cacheViewModel,
+                    attachments = currentDraft.attachments,
+                    onSendClick = {
+                        coroutineScope.launch {
+                            if (conversationId != -1L) {
+                                viewModel.insertMessage(
+                                    conversationId = conversationId,
+                                    role = "user",
+                                    text = currentDraft.text.ifBlank { null },
+                                    photosAndVideos = currentDraft.attachments.ifEmpty { null }
+                                )
+                                println("Message with attachments sent for conversation $conversationId: ${currentDraft.attachments.size} attachments")
+                                cacheViewModel.clearDraft(conversationId)
+                                println("Draft cleared for conversation $conversationId")
+                            } else {
+                                println("Error: Invalid conversation ID to send message to.")
+                            }
                         }
-                    }
-                },
-                onPlusClick = {
-                    if (currentDraft.attachments.size < 4) {
-                        val currentAttachmentCount = currentDraft.attachments.size
-                        println("Current num attachments: $currentAttachmentCount")
-                        // Launch the appropriate picker based on remaining slots
-                        if (currentDraft.attachments.size == 3) {
-                            println("Launch Single Media")
-                            pickSingleMediaLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                            )
-                        } else { // remainingAttachmentSlots is 2, 3, or 4
-                            println("Launch Multiple Media")
-                            pickMultipleMediaLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                            )
+                    },
+                    onPlusClick = {
+                        if (currentDraft.attachments.size < 4) {
+                            val currentAttachmentCount = currentDraft.attachments.size
+                            println("Current num attachments: $currentAttachmentCount")
+                            if (currentDraft.attachments.size == 3) {
+                                println("Launch Single Media")
+                                pickSingleMediaLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                                )
+                            } else {
+                                println("Launch Multiple Media")
+                                pickMultipleMediaLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                                )
+                            }
                         }
+                    },
+                    onAttachmentDeleteClick = { uriToDelete ->
+                        cacheViewModel.removeAttachment(conversationId, uriToDelete)
+                        println("Attachment deleted from draft for conversation $conversationId: $uriToDelete")
                     }
-                    // The AttachmentBar already handled the toast if remainingAttachmentSlots is 0
-                },
-                onAttachmentDeleteClick = { uriToDelete ->
-                    // Handle attachment deletion from the draft in cacheViewModel
-                    cacheViewModel.removeAttachment(conversationId, uriToDelete)
-                    println("Attachment deleted from draft for conversation $conversationId: $uriToDelete")
-                }
-            )
+                )
+            }
+
+            // HeaderBar above CameraOverlay, 16dp from top center
+            AnimatedVisibility( // Wrap HeaderBar with AnimatedVisibility
+                visible = !isRecording, // Visible when not recording
+                enter = fadeIn(), // Fade in when becoming visible
+                exit = fadeOut(), // Fade out when becoming invisible
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+            ) {
+                HeaderBar(
+                    conversationId = conversationId,
+                    navController = navController,
+                    title = currentConversation?.title ?: "Loading Conversation...",
+                )
+            }
+
         }
     }
 }

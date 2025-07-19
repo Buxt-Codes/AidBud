@@ -40,7 +40,6 @@ fun AttachmentBar(
     modifier: Modifier = Modifier,
     settingsViewModel: SettingsViewModel,
     cacheViewModel: GlobalCacheViewModel,
-    isRecording: Boolean,
     attachments: List<Uri>,
     onSendClick: () -> Unit,
     onPlusClick: (Int) -> Unit,
@@ -67,7 +66,7 @@ fun AttachmentBar(
             modifier = Modifier
                 .fillMaxSize() // Fill the size of the parent Box (AttachmentBar)
                 .clip(RoundedCornerShape(cornerRadius)) // Apply rounded corners to the background
-                .background(Color.Gray.copy(alpha = 0.5f)) // Semi-transparent background
+                .background(Color.LightGray.copy(alpha = 0.5f)) // Semi-transparent background
                 .graphicsLayer {
                     renderEffect = BlurEffect(radiusX = blurRadius, radiusY = blurRadius) // Apply blur here
                 }
