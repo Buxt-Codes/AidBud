@@ -88,6 +88,10 @@ dependencies {
     ksp(libs.hilt.compiler) // Hilt's annotation processor
     implementation(libs.androidx.hilt.navigation.compose) // For hiltViewModel()
 
+    // Google AI Edge
+    implementation(libs.google.mediapipe.tasks)
+    implementation(libs.google.localagents)
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
