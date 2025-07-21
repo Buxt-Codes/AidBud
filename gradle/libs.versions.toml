@@ -24,7 +24,8 @@ datastore = "1.1.1"
 coil = "2.5.0"
 hilt = "2.51.1"
 hiltNavigationCompose = "1.2.0"
-mediapipe = "0.10.24"
+mediapipe = "0.10.25"
+tasks = "latest.release"
 localagents = "0.1.0"
 
 [libraries]
@@ -68,6 +69,9 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 
+google-mediapipe-tasks-vision = { group = "com.google.mediapipe", name = "tasks-vision", version.ref = "tasks" }
+google-mediapipe-tasks-text = { group = "com.google.mediapipe", name = "tasks-text", version.ref = "tasks" }
+google-mediapipe-tasks-audio = { group = "com.google.mediapipe", name = "tasks-audio", version.ref = "tasks" }
 google-mediapipe-tasks = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipe" }
 google-localagents = { group = "com.google.ai.edge.localagents", name = "localagents-rag", version.ref = "localagents" }
 

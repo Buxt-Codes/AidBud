@@ -89,6 +89,9 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose) // For hiltViewModel()
 
     // Google AI Edge
+    implementation(libs.google.mediapipe.tasks.vision)
+    implementation(libs.google.mediapipe.tasks.text)
+    implementation(libs.google.mediapipe.tasks.audio)
     implementation(libs.google.mediapipe.tasks)
     implementation(libs.google.localagents)
 
