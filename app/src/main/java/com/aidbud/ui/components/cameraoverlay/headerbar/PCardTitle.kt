@@ -28,18 +28,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.clickable
+import com.aidbud.ui.components.chat.headerbar.PCardTitle
 
 @OptIn(ExperimentalAnimationApi::class) // Required for AnimatedContent
 @Composable
-fun AnimatedPageTitleBox(
+fun PCardTitle(
     title: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight() // Fills the available height of its parent
+            .fillMaxSize()
             .background(Color.Transparent)
             .clickable { onClick() },
         contentAlignment = Alignment.Center // Center the title within the box
@@ -80,7 +80,7 @@ fun AnimatedPageTitleBoxPreview() {
     // This preview won't show the animation directly as it's static.
     // To see the animation, you'd integrate this into a stateful composable
     // where the 'title' changes over time (e.g., via a button click or timer).
-    AnimatedPageTitleBox(
+    PCardTitle (
         title = "Preview Title",
         onClick = { /* TODO: Implement send action */ }
     )

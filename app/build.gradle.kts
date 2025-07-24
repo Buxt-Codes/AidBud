@@ -58,6 +58,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.compose.foundation)
+
 
     // Room
     implementation(libs.androidx.room.runtime) // Note the dot notation for version catalogs

@@ -80,7 +80,7 @@ fun HeaderBar(
             )
 
             // Middle: Animated Page Title Box
-            AnimatedPageTitleBox(
+            PCardTitle(
                 title = title,
                 onClick = { /* TODO: Implement send action */ },
                 modifier = Modifier.weight(1f), // Take up remaining space
