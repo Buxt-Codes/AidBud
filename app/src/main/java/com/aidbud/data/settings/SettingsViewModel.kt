@@ -24,10 +24,38 @@ class SettingsViewModel @Inject constructor(
     val conversationLimit: StateFlow<Int> = settingsDataStore.conversationLimit
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 100)
 
+    // New StateFlows for the integrated settings
+    val triage: StateFlow<Map<String, String>> = settingsDataStore.triage
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    val firstAidAccess: StateFlow<FirstAidAccess> = settingsDataStore.firstAidAccess
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FirstAidAccess.NON_IMMEDIATE)
+
+    val currentContext: StateFlow<Pair<CurrentContext, String?>> = settingsDataStore.currentContext
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Pair(CurrentContext.DAY_TO_DAY, null))
+
 
     fun setConversationLimit(limit: Int) {
         viewModelScope.launch {
             settingsDataStore.setConversationLimit(limit)
+        }
+    }
+
+    fun setTriage(triageMap: Map<String, String>) {
+        viewModelScope.launch {
+            settingsDataStore.setTriage(triageMap)
+        }
+    }
+
+    fun setFirstAidAccess(access: FirstAidAccess) {
+        viewModelScope.launch {
+            settingsDataStore.setFirstAidAccess(access)
+        }
+    }
+
+    fun setCurrentContext(context: CurrentContext, customValue: String? = null) {
+        viewModelScope.launch {
+            settingsDataStore.setCurrentContext(context, customValue)
         }
     }
 }
