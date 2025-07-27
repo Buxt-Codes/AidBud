@@ -6,7 +6,10 @@ import com.aidbud.data.message.Message
 import com.aidbud.data.message.MessageDao
 import com.aidbud.data.pcard.PCard
 import com.aidbud.data.pcard.PCardDao
+import com.aidbud.data.attachment.AttachmentGroup
+import com.aidbud.data.attachment.AttachmentGroupDao
 import kotlinx.coroutines.flow.Flow
+import android.net.Uri
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,7 +21,8 @@ import javax.inject.Singleton
 class AidBudRepository @Inject constructor(
     private val conversationDao: ConversationDao,
     private val messageDao: MessageDao,
-    private val pCardDao: PCardDao
+    private val pCardDao: PCardDao,
+    private val attachmentGroupDao: AttachmentGroupDao
 ) {
     // --- Conversation Operations ---
     fun getAllConversations(): Flow<List<Conversation>> = conversationDao.getAllConversations()
@@ -42,4 +46,12 @@ class AidBudRepository @Inject constructor(
     suspend fun updatePCard(pCard: PCard) = pCardDao.updatePCard(pCard)
     suspend fun deletePCard(pCard: PCard) = pCardDao.deletePCard(pCard)
     suspend fun deletePCardsForConversation(conversationId: Long) = pCardDao.deletePCardsForConversation(conversationId)
+
+    fun getAttachmentGroupsForConversation(conversationId: Long) = attachmentGroupDao.getAttachmentGroupsForConversation(conversationId)
+    fun getAttachmentGroupsById(attachmentGroupId: Long) = attachmentGroupDao.getAttachmentGroupsById(attachmentGroupId)
+    fun getAttachmentGroupsByAttachments(attachments: List<Uri>, conversationId: Long) = attachmentGroupDao.getAttachmentGroupsByAttachments(attachments, conversationId)
+    suspend fun insertAttachmentGroup(attachmentGroup: AttachmentGroup) = attachmentGroupDao.insertAttachmentGroup(attachmentGroup)
+    suspend fun updateAttachmentGroup(attachmentGroup: AttachmentGroup) = attachmentGroupDao.updateAttachmentGroup(attachmentGroup)
+    suspend fun deleteAttachmentGroup(attachmentGroup: AttachmentGroup) = attachmentGroupDao.deleteAttachmentGroup(attachmentGroup)
+    suspend fun deleteAttachmentGroupsForConversation(conversationId: Long) = attachmentGroupDao.deleteAttachmentGroupsForConversation(conversationId)
 }

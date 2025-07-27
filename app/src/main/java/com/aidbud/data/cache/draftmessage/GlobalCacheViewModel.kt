@@ -13,12 +13,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import javax.inject.Singleton
 
 /**
  * ViewModel for managing global cache, specifically draft messages with attachments.
  * Context is injected via Hilt for media operations.
  */
-@HiltViewModel
+@Singleton
 class GlobalCacheViewModel @Inject constructor(
     @ApplicationContext private val applicationContext: Context // Inject Context via Hilt
 ) : ViewModel() {

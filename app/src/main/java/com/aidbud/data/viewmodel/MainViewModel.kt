@@ -1,12 +1,15 @@
 package com.aidbud.data.viewmodel
 
 
+import GemmaNanoModel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aidbud.data.attachment.AttachmentGroup
 import com.aidbud.data.conversation.Conversation
 import com.aidbud.data.message.Message
 import com.aidbud.data.pcard.PCard
+import com.aidbud.data.settings.SettingsDataStore
 import com.aidbud.data.viewmodel.repo.AidBudRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -29,7 +32,9 @@ import javax.inject.Inject
  */
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val repository: AidBudRepository
+    private val repository: AidBudRepository,
+    private val settingsDataStore: SettingsDataStore,
+    private val llmEngine: GemmaNanoModel
 ) : ViewModel() {
 
     // --- LLM Streaming State ---
@@ -37,6 +42,9 @@ class MainViewModel @Inject constructor(
     // This is a "hot" flow, suitable for events and streaming data.
     private val _llmResponseStream = MutableSharedFlow<LLMResponseState>()
     val llmResponseStream: SharedFlow<LLMResponseState> = _llmResponseStream
+
+    val conversationLimit: StateFlow<Int> = settingsDataStore.conversationLimit
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 100)
 
     // --- Conversation Operations ---
 
@@ -67,8 +75,11 @@ class MainViewModel @Inject constructor(
      * @return The ID of the newly inserted conversation.
      */
     suspend fun insertConversation(title: String): Long {
-        val conversation = Conversation(title = title, lastUpdated = System.currentTimeMillis())
-        return repository.insertConversation(conversation)
+        val conversation = Conversation(title = title, ragChain = null, semanticMemory = null, lastUpdated = System.currentTimeMillis())
+        val conversationId = repository.insertConversation(conversation)
+        val semanticMemory = llmEngine.initialiseRAG(conversationId)
+        updateConversation(conversation.copy(semanticMemory = semanticMemory))
+        return conversationId
     }
 
     /**
@@ -261,6 +272,56 @@ class MainViewModel @Inject constructor(
     fun deletePCardsForConversation(conversationId: Long) {
         viewModelScope.launch {
             repository.deletePCardsForConversation(conversationId)
+        }
+    }
+
+    fun getAttachmentGroupsForConversation(conversationId: Long): Flow<List<AttachmentGroup>> {
+        return repository.getAttachmentGroupsForConversation(conversationId)
+    }
+
+    fun getAttachmentGroupById(attachmentGroupId: Long): Flow<AttachmentGroup?> {
+        return repository.getAttachmentGroupsById(attachmentGroupId)
+    }
+
+    fun insertAttachmentGroup(
+        conversationId: Long,
+        attachments: List<Uri>,
+        description: String? = null,
+        transcription: String? = null
+    ) {
+        viewModelScope.launch {
+            val attachmentGroup = AttachmentGroup(
+                conversationId = conversationId,
+                lastUpdated = System.currentTimeMillis(),
+                attachments = attachments,
+                description = description,
+                transcription = transcription
+            )
+            repository.insertAttachmentGroup(attachmentGroup)
+            // Update parent conversation's timestamp to bring it to top of list
+            repository.getConversationById(conversationId).collect { conversation ->
+                conversation?.let {
+                    repository.updateConversation(it.copy(lastUpdated = System.currentTimeMillis()))
+                }
+            }
+        }
+    }
+
+    fun updateAttachmentGroup(attachmentGroup: AttachmentGroup) {
+        viewModelScope.launch {
+            repository.updateAttachmentGroup(attachmentGroup)
+        }
+    }
+
+    fun deleteAttachmentGroup(attachmentGroup: AttachmentGroup) {
+        viewModelScope.launch {
+            repository.deleteAttachmentGroup(attachmentGroup)
+        }
+    }
+
+    fun deleteAttachmentGroupsForConversation(conversationId: Long) {
+        viewModelScope.launch {
+            repository.deleteAttachmentGroupsForConversation(conversationId)
         }
     }
 

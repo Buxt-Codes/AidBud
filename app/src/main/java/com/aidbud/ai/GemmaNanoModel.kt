@@ -12,6 +12,31 @@ import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession
 import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession.LlmInferenceSessionOptions
 import com.google.mediapipe.tasks.genai.llminference.ProgressListener
+import com.google.ai.edge.localagents.rag.chains.ChainConfig
+import com.google.ai.edge.localagents.rag.chains.RetrievalAndInferenceChain
+import com.google.ai.edge.localagents.rag.memory.DefaultSemanticTextMemory
+import com.google.ai.edge.localagents.rag.memory.SqliteVectorStore
+import com.google.ai.edge.localagents.rag.models.AsyncProgressListener
+import com.google.ai.edge.localagents.rag.models.Embedder
+import com.google.ai.edge.localagents.rag.models.GeckoEmbeddingModel
+import com.google.ai.edge.localagents.rag.models.LanguageModelResponse
+import com.google.ai.edge.localagents.rag.models.MediaPipeLlmBackend
+import com.google.mediapipe.tasks.genai.llminference.LlmInference.LlmInferenceOptions
+import com.google.ai.edge.localagents.rag.prompt.PromptBuilder
+import com.google.ai.edge.localagents.rag.retrieval.RetrievalConfig
+import com.google.ai.edge.localagents.rag.retrieval.RetrievalConfig.TaskType
+import com.google.ai.edge.localagents.rag.retrieval.RetrievalRequest
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.util.concurrent.Executors
+import kotlinx.coroutines.coroutineScope
+import java.util.Optional
+import kotlin.jvm.optionals.getOrNull
+import java.util.concurrent.ConcurrentHashMap
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+import com.google.common.util.concurrent.FutureCallback
+import android.content.ContentValues
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -21,9 +46,23 @@ import kotlinx.coroutines.withContext
 import kotlin.collections.contains
 import kotlin.math.max
 import org.json.JSONObject
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.guava.await
 
 import com.aidbud.ai.ModelResponse
 import com.aidbud.ai.ModelResponseParser
+import com.aidbud.data.viewmodel.repo.AidBudRepository
+import com.google.common.util.concurrent.Futures
+import com.google.common.util.concurrent.MoreExecutors
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.suspendCancellableCoroutine
+import javax.inject.Inject
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 val MAX_IMAGES = 64
 var MAX_TOKENS = 2048
@@ -31,6 +70,9 @@ var MAX_TOKENS = 2048
 var DECODE_TOKEN_OFFSET = 256
 var MODEL_PATH = ""
 var FRAMES_PER_SECOND = 1
+var GECKO_MODEL_PATH = ""
+var TOKENIZER_MODEL_PATH = ""
+
 
 class ModelLoadFailException :
     Exception("Failed to load model, please try again")
@@ -45,24 +87,42 @@ class ModelSessionCreateFailException :
  *
  * @param context The application context, needed for accessing assets and services.
  */
-class LlmInferenceService(private val context: Context) {
+class GemmaNanoModel @Inject constructor(
+    @ApplicationContext private val context: Context,
+    private val repository: AidBudRepository
+) {
 
     private var llmInference: LlmInference? = null
     private var llmInferenceSession: LlmInferenceSession? = null
+    private var inferenceOptions = LlmInference.LlmInferenceOptions.builder()
+        .setModelPath(MODEL_PATH)
+        .setMaxTokens(MAX_TOKENS)
+        .setMaxNumImages(MAX_IMAGES)
+        .setPreferredBackend(LlmInference.Backend.CPU)
+        .build()
+    private val sessionOptions =  LlmInferenceSessionOptions.builder()
+        .setTemperature(1.0f)
+        .setTopK(64)
+        .setTopP(0.95f)
+        .setGraphOptions(GraphOptions.builder().setEnableVisionModality(true).build())
+        .build()
+
+    private val embedder: Embedder<String> = GeckoEmbeddingModel(
+            GECKO_MODEL_PATH,
+            Optional.of(TOKENIZER_MODEL_PATH),
+            false,
+        )
+
+    private val managerScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+    private var currentChatOperationJob: Job? = null
 
     companion object {
-        private const val TAG = "LlmInferenceService"
+        private const val TAG = "GemmaNanoModel"
         // A configurable constant for the number of frames to extract from a video.
         private const val FRAMES_PER_VIDEO = 1
     }
 
-    private fun createEngine(context: Context) {
-        val inferenceOptions = LlmInference.LlmInferenceOptions.builder()
-            .setModelPath(MODEL_PATH)
-            .setMaxTokens(MAX_TOKENS)
-            .setMaxNumImages(MAX_IMAGES)
-            .build()
-
+    private fun createEngine() {
         try {
             llmInference = LlmInference.createFromOptions(context, inferenceOptions)
         } catch (e: Exception) {
@@ -72,19 +132,9 @@ class LlmInferenceService(private val context: Context) {
     }
 
     private fun createSession() {
-
-        val inferenceOptions = LlmInference.LlmInferenceOptions.builder()
-            .setModelPath(MODEL_PATH)
-            .setMaxTokens(MAX_TOKENS)
-            .build()
-
-        val sessionOptions =  LlmInferenceSessionOptions.builder()
-            .setTemperature(1.0f)
-            .setTopK(64)
-            .setTopP(0.95f)
-            .setGraphOptions(GraphOptions.builder().setEnableVisionModality(true).build())
-            .build()
-
+        if (llmInference == null) {
+            createEngine()
+        }
         try {
             llmInferenceSession = LlmInferenceSession.createFromOptions(llmInference, sessionOptions)
         } catch (e: Exception) {
@@ -92,6 +142,47 @@ class LlmInferenceService(private val context: Context) {
             throw ModelSessionCreateFailException()
         }
     }
+
+    fun initialiseRAG(
+        conversationId: Long
+    ): DefaultSemanticTextMemory {
+        return DefaultSemanticTextMemory(SqliteVectorStore(768, "rag_$conversationId.db"), embedder)
+    }
+
+    suspend fun runRAG(conversationId: Long, query: String, timeoutMillis: Long = 5000L): List<String>? {
+        return withContext(Dispatchers.IO) {
+            val config = RetrievalConfig.create(3, 0.5f, TaskType.RETRIEVAL_QUERY)
+            val request = RetrievalRequest.create(query, config)
+            val conversation = repository.getConversationById(conversationId).first()
+                ?: throw IllegalArgumentException("Conversation not found for id $conversationId")
+
+            val semanticMemory = conversation.semanticMemory
+                ?: throw IllegalStateException("SemanticMemory is null for conversation $conversationId")
+
+            val future = semanticMemory.retrieveResults(request)
+            val response = withTimeoutOrNull(timeoutMillis) { future.await() }
+
+            response?.entities?.map { it.data }
+        }
+    }
+
+    suspend fun insertRAG(conversationId: Long, data: String, timeoutMillis: Long = 5000L): Boolean? {
+        return withContext(Dispatchers.IO) {
+            val conversation = repository.getConversationById(conversationId).first()
+                ?: throw IllegalArgumentException("Conversation not found for id $conversationId")
+
+            val semanticMemory = conversation.semanticMemory
+                ?: throw IllegalStateException("SemanticMemory is null for conversation $conversationId")
+            val future = semanticMemory.recordMemoryItem(data)
+
+            val result = withTimeoutOrNull(timeoutMillis) {
+                future.await()
+            }
+            result
+        }
+    }
+
+
 
 //    fun estimateTokensRemaining(prompt: String): Int {
 //        val context = uiState.messages.joinToString { it.rawMessage } + prompt
@@ -103,16 +194,7 @@ class LlmInferenceService(private val context: Context) {
 //        // Token size is approximate so, let's not return anything below 0
 //        return max(0, remainingTokens)
 //    }
-//
-//    /**
-//     * Generates a response from the LLM based on a text prompt and a list of media URIs.
-//     * This method now uses LlmInferenceSession to properly handle multimodal inputs.
-//     *
-//     * @param prompt The primary text prompt.
-//     * @param attachments A list of Uris pointing to images or videos.
-//     * @return A Flow<String> that emits the generated text token-by-token.
-//     * @throws IllegalStateException if the service has not been initialized.
-//     */
+
     fun generateResponse(
         prompt: String,
         attachments: List<Uri> = emptyList()

@@ -28,6 +28,9 @@ hiltNavigationCompose = "1.2.0"
 mediapipe = "0.10.25"
 tasks = "latest.release"
 localagents = "0.1.0"
+google-guava = "latest release"
+kotlinx-guava = "1.7.3"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -76,6 +79,9 @@ google-mediapipe-tasks-text = { group = "com.google.mediapipe", name = "tasks-te
 google-mediapipe-tasks-audio = { group = "com.google.mediapipe", name = "tasks-audio", version.ref = "tasks" }
 google-mediapipe-tasks = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipe" }
 google-localagents = { group = "com.google.ai.edge.localagents", name = "localagents-rag", version.ref = "localagents" }
+google-guava = { group = "com.google.guava", name = "guava", version.ref = "google-guava" }
+
+kotlinx-guava = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-guava", version.ref = "kotlinx-guava" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

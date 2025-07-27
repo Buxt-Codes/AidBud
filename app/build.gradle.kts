@@ -96,6 +96,10 @@ dependencies {
     implementation(libs.google.mediapipe.tasks.audio)
     implementation(libs.google.mediapipe.tasks)
     implementation(libs.google.localagents)
+    implementation(libs.google.guava)
+
+    // Misc
+    implementation(libs.kotlinx.guava)
 
     // Tests
     testImplementation(libs.junit)
