@@ -5,7 +5,6 @@ import GemmaNanoModel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.aidbud.data.attachment.AttachmentGroup
 import com.aidbud.data.conversation.Conversation
 import com.aidbud.data.message.Message
 import com.aidbud.data.pcard.PCard
@@ -272,56 +271,6 @@ class MainViewModel @Inject constructor(
     fun deletePCardsForConversation(conversationId: Long) {
         viewModelScope.launch {
             repository.deletePCardsForConversation(conversationId)
-        }
-    }
-
-    fun getAttachmentGroupsForConversation(conversationId: Long): Flow<List<AttachmentGroup>> {
-        return repository.getAttachmentGroupsForConversation(conversationId)
-    }
-
-    fun getAttachmentGroupById(attachmentGroupId: Long): Flow<AttachmentGroup?> {
-        return repository.getAttachmentGroupsById(attachmentGroupId)
-    }
-
-    fun insertAttachmentGroup(
-        conversationId: Long,
-        attachments: List<Uri>,
-        description: String? = null,
-        transcription: String? = null
-    ) {
-        viewModelScope.launch {
-            val attachmentGroup = AttachmentGroup(
-                conversationId = conversationId,
-                lastUpdated = System.currentTimeMillis(),
-                attachments = attachments,
-                description = description,
-                transcription = transcription
-            )
-            repository.insertAttachmentGroup(attachmentGroup)
-            // Update parent conversation's timestamp to bring it to top of list
-            repository.getConversationById(conversationId).collect { conversation ->
-                conversation?.let {
-                    repository.updateConversation(it.copy(lastUpdated = System.currentTimeMillis()))
-                }
-            }
-        }
-    }
-
-    fun updateAttachmentGroup(attachmentGroup: AttachmentGroup) {
-        viewModelScope.launch {
-            repository.updateAttachmentGroup(attachmentGroup)
-        }
-    }
-
-    fun deleteAttachmentGroup(attachmentGroup: AttachmentGroup) {
-        viewModelScope.launch {
-            repository.deleteAttachmentGroup(attachmentGroup)
-        }
-    }
-
-    fun deleteAttachmentGroupsForConversation(conversationId: Long) {
-        viewModelScope.launch {
-            repository.deleteAttachmentGroupsForConversation(conversationId)
         }
     }
 

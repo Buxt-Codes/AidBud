@@ -182,7 +182,21 @@ class GemmaNanoModel @Inject constructor(
         }
     }
 
+    fun promptBuild(
+        query: String,
+        attachmentContext: String? = null,
+        ragContext: List<String> = emptyList()
+    ) {
 
+    }
+
+    fun chat(
+        conversationId: Long,
+        query: String,
+        attachments: List<Uri> = emptyList()
+    ) {
+
+    }
 
 //    fun estimateTokensRemaining(prompt: String): Int {
 //        val context = uiState.messages.joinToString { it.rawMessage } + prompt

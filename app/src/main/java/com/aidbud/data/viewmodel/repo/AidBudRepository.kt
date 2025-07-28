@@ -6,8 +6,8 @@ import com.aidbud.data.message.Message
 import com.aidbud.data.message.MessageDao
 import com.aidbud.data.pcard.PCard
 import com.aidbud.data.pcard.PCardDao
-import com.aidbud.data.attachment.AttachmentGroup
-import com.aidbud.data.attachment.AttachmentGroupDao
+import com.aidbud.data.ragdata.RagData
+import com.aidbud.data.ragdata.RagDataDao
 import kotlinx.coroutines.flow.Flow
 import android.net.Uri
 import javax.inject.Inject
@@ -22,7 +22,7 @@ class AidBudRepository @Inject constructor(
     private val conversationDao: ConversationDao,
     private val messageDao: MessageDao,
     private val pCardDao: PCardDao,
-    private val attachmentGroupDao: AttachmentGroupDao
+    private val ragDataDao: RagDataDao
 ) {
     // --- Conversation Operations ---
     fun getAllConversations(): Flow<List<Conversation>> = conversationDao.getAllConversations()
@@ -47,11 +47,12 @@ class AidBudRepository @Inject constructor(
     suspend fun deletePCard(pCard: PCard) = pCardDao.deletePCard(pCard)
     suspend fun deletePCardsForConversation(conversationId: Long) = pCardDao.deletePCardsForConversation(conversationId)
 
-    fun getAttachmentGroupsForConversation(conversationId: Long) = attachmentGroupDao.getAttachmentGroupsForConversation(conversationId)
-    fun getAttachmentGroupsById(attachmentGroupId: Long) = attachmentGroupDao.getAttachmentGroupsById(attachmentGroupId)
-    fun getAttachmentGroupsByAttachments(attachments: List<Uri>, conversationId: Long) = attachmentGroupDao.getAttachmentGroupsByAttachments(attachments, conversationId)
-    suspend fun insertAttachmentGroup(attachmentGroup: AttachmentGroup) = attachmentGroupDao.insertAttachmentGroup(attachmentGroup)
-    suspend fun updateAttachmentGroup(attachmentGroup: AttachmentGroup) = attachmentGroupDao.updateAttachmentGroup(attachmentGroup)
-    suspend fun deleteAttachmentGroup(attachmentGroup: AttachmentGroup) = attachmentGroupDao.deleteAttachmentGroup(attachmentGroup)
-    suspend fun deleteAttachmentGroupsForConversation(conversationId: Long) = attachmentGroupDao.deleteAttachmentGroupsForConversation(conversationId)
+    fun getRagDataForConversation(conversationId: Long) = ragDataDao.getRagDataForConversation(conversationId)
+    fun getRagDataById(ragDataId: Long) = ragDataDao.getRagDataById(ragDataId)
+    fun getRagText(conversationId: Long) = ragDataDao.getRagText(conversationId)
+    fun getRagAttachment(conversationId: Long) = ragDataDao.getRagAttachment(conversationId)
+    suspend fun insertRagData(ragData: RagData) = ragDataDao.insertRagData(ragData)
+    suspend fun updateRagData(ragData: RagData) = ragDataDao.updateRagData(ragData)
+    suspend fun deleteRagData(ragData: RagData) = ragDataDao.deleteRagData(ragData)
+    suspend fun deleteRagDataForConversation(conversationId: Long) = ragDataDao.deleteRagDataForConversation(conversationId)
 }

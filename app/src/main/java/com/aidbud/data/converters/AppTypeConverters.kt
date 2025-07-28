@@ -34,4 +34,25 @@ object AppTypeConverters {
         val list = Gson().fromJson<List<String>>(json, type)
         return list.map { it.toUri() }
     }
+
+    @TypeConverter
+    fun fromFloatList(list: List<Float>): String {
+        return list.joinToString(",")
+    }
+
+    @TypeConverter
+    fun toFloatList(data: String): List<Float> {
+        return data.split(",").map { it.toFloat() }
+    }
+
+    @TypeConverter
+    fun fromMap(map: Map<String, Any>?): String {
+        return Gson().toJson(map)
+    }
+
+    @TypeConverter
+    fun toMap(json: String): Map<String, Any> {
+        return Gson().fromJson(json, object : TypeToken<Map<String, Any>>() {}.type)
+    }
+
 }
