@@ -1,1 +1,4 @@
 /build
+/src/main/assets/vosk/
+/src/main/assets/tokeniser/
+/src/main/assets/embedder/
