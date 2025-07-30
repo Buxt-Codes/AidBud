@@ -9,8 +9,8 @@ import com.aidbud.data.message.Message // Import the new Message entity
 import com.aidbud.data.message.MessageDao // Import the new MessageDao
 import com.aidbud.data.pcard.PCard // Import the new PCard entity
 import com.aidbud.data.pcard.PCardDao // Import the new PCardDao
-import com.aidbud.data.attachment.AttachmentGroup // Import the new AttachmentGroup entity
-import com.aidbud.data.attachment.AttachmentGroupDao // Import the new AttachmentGroupDao
+import com.aidbud.data.ragdata.RagData // Import the new AttachmentGroupDao
+import com.aidbud.data.ragdata.RagDataDao
 import com.aidbud.data.converters.AppTypeConverters // Import your Type Converters object
 
 @Database(
@@ -18,7 +18,7 @@ import com.aidbud.data.converters.AppTypeConverters // Import your Type Converte
         Conversation::class,
         Message::class,
         PCard::class,
-        AttachmentGroup::class
+        RagData::class
    ], // <--- ADD Message::class here
     version = 1, // <--- IMPORTANT: Increment database version
     exportSchema = true
@@ -28,5 +28,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun conversationDao(): ConversationDao
     abstract fun messageDao(): MessageDao // <--- ADD THIS for your MessageDao
     abstract fun pCardDao(): PCardDao // <--- ADD THIS for your PCardDao
-    abstract fun attachmentGroupDao(): AttachmentGroupDao // <--- ADD THIS for your PCardDao
+    abstract fun ragDataDao(): RagDataDao // <--- ADD THIS for your PCardDao
 }

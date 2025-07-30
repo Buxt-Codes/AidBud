@@ -1,10 +1,9 @@
 package com.aidbud.data.viewmodel
 
-
-import GemmaNanoModel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.aidbud.ai.LLMViewModel
 import com.aidbud.data.conversation.Conversation
 import com.aidbud.data.message.Message
 import com.aidbud.data.pcard.PCard
@@ -33,7 +32,7 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val repository: AidBudRepository,
     private val settingsDataStore: SettingsDataStore,
-    private val llmEngine: GemmaNanoModel
+    private val llm: LLMViewModel
 ) : ViewModel() {
 
     // --- LLM Streaming State ---
@@ -74,11 +73,7 @@ class MainViewModel @Inject constructor(
      * @return The ID of the newly inserted conversation.
      */
     suspend fun insertConversation(title: String): Long {
-        val conversation = Conversation(title = title, ragChain = null, semanticMemory = null, lastUpdated = System.currentTimeMillis())
-        val conversationId = repository.insertConversation(conversation)
-        val semanticMemory = llmEngine.initialiseRAG(conversationId)
-        updateConversation(conversation.copy(semanticMemory = semanticMemory))
-        return conversationId
+        return repository.insertConversation(Conversation(title = title,  lastUpdated = System.currentTimeMillis()))
     }
 
     /**
@@ -134,7 +129,7 @@ class MainViewModel @Inject constructor(
         conversationId: Long,
         role: String,
         text: String?,
-        photosAndVideos: List<Uri>? = null,
+        attachments: List<Uri>? = null,
         pCardChanges: String? = null
     ) {
         viewModelScope.launch {
@@ -143,7 +138,7 @@ class MainViewModel @Inject constructor(
                 timestamp = System.currentTimeMillis(),
                 role = role,
                 text = text,
-                photosAndVideos = photosAndVideos,
+                attachments = attachments,
                 pCardChanges = pCardChanges
             )
             repository.insertMessage(message)

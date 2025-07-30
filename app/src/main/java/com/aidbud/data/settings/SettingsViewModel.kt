@@ -20,11 +20,18 @@ class SettingsViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore // Inject the DataStore class
 ) : ViewModel() {
 
-
     val conversationLimit: StateFlow<Int> = settingsDataStore.conversationLimit
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 100)
 
-    // New StateFlows for the integrated settings
+    val triageEnabled: StateFlow<Boolean> = settingsDataStore.triageEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val firstAidEnabled: StateFlow<Boolean> = settingsDataStore.firstAidEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val contextEnabled: StateFlow<Boolean> = settingsDataStore.contextEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     val triage: StateFlow<Map<String, String>> = settingsDataStore.triage
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
@@ -38,6 +45,24 @@ class SettingsViewModel @Inject constructor(
     fun setConversationLimit(limit: Int) {
         viewModelScope.launch {
             settingsDataStore.setConversationLimit(limit)
+        }
+    }
+
+    fun setTriageEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.setTriageEnabled(enabled)
+        }
+    }
+
+    fun setFirstAidEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.setFirstAidEnabled(enabled)
+        }
+    }
+
+    fun setContextEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsDataStore.setContextEnabled(enabled)
         }
     }
 

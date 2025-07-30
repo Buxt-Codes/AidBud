@@ -38,6 +38,7 @@ android {
     }
     buildFeatures {
         compose = true
+        mlModelBinding = true
     }
 
     ksp {
@@ -100,6 +101,8 @@ dependencies {
 
     // Misc
     implementation(libs.kotlinx.guava)
+    implementation(libs.jna)
+    implementation(libs.vosk.android)
 
     // Tests
     testImplementation(libs.junit)

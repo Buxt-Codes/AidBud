@@ -35,7 +35,6 @@ data class PCard(
     @ColumnInfo(name = "injury_identification")
     val injuryIdentification: String?, // Optional
 
-    // "Input changes" and "Output changes" can be stored as JSON strings if they are structured data
     @ColumnInfo(name = "identified_injury_description")
     val identifiedInjuryDescription: String?, // Optional
 

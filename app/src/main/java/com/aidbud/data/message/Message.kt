@@ -33,8 +33,8 @@ data class Message(
     val role: String,
 
     // Store images/videos as a JSON string of paths/URIs
-    @ColumnInfo(name = "photos_videos")
-    val photosAndVideos: List<Uri>?, // Optional
+    @ColumnInfo(name = "attachments")
+    val attachments: List<Uri>?, // Optional
 
     @ColumnInfo(name = "text")
     val text: String?, // Optional

@@ -228,7 +228,7 @@ fun CameraPage(
                                     conversationId = conversationId,
                                     role = "user",
                                     text = currentDraft.text.ifBlank { null },
-                                    photosAndVideos = currentDraft.attachments.ifEmpty { null }
+                                    attachments = currentDraft.attachments.ifEmpty { null }
                                 )
                                 println("Message with attachments sent for conversation $conversationId: ${currentDraft.attachments.size} attachments")
                                 cacheViewModel.clearDraft(conversationId)

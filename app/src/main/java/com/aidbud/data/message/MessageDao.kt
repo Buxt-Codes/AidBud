@@ -12,6 +12,9 @@ interface MessageDao {
     @Query("SELECT * FROM messages WHERE conversation_id = :conversationId ORDER BY message_id DESC")
     fun getMessagesForConversation(conversationId: Long): Flow<List<Message>>
 
+    @Query("SELECT * FROM messages WHERE conversation_id = :conversationId ORDER BY message_id DESC LIMIT :limit")
+    fun getMessagesForConversationLimit(conversationId: Long, limit: Int): Flow<List<Message>>
+
     @Query("SELECT * FROM messages WHERE message_id = :messageId")
     fun getMessageById(messageId: Long): Flow<Message?>
 

@@ -33,6 +33,7 @@ class AidBudRepository @Inject constructor(
 
     // --- Message Operations ---
     fun getMessagesForConversation(conversationId: Long): Flow<List<Message>> = messageDao.getMessagesForConversation(conversationId)
+    fun getMessagesForConversationLimit(conversationId: Long, limit: Int): Flow<List<Message>> = messageDao.getMessagesForConversationLimit(conversationId, limit)
     fun getMessageById(messageId: Long): Flow<Message?> = messageDao.getMessageById(messageId)
     suspend fun insertMessage(message: Message): Long = messageDao.insertMessage(message)
     suspend fun updateMessage(message: Message) = messageDao.updateMessage(message)

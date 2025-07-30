@@ -47,6 +47,9 @@ enum class CurrentContext {
 class SettingsDataStore @Inject constructor(@ApplicationContext private val context: Context) {
 
     private val CONVERSATION_LIMIT_KEY = intPreferencesKey("conversation_limit")
+    private val TRIAGE_ENABLED_KEY = booleanPreferencesKey("triage_enabled")
+    private val FIRST_AID_ENABLED_KEY = booleanPreferencesKey("first_aid_enabled")
+    private val CONTEXT_ENABLED_KEY = booleanPreferencesKey("context_enabled")
     private val TRIAGE_KEY = stringPreferencesKey("triage")
     private val FIRST_AID_ACCESS_KEY = stringPreferencesKey("first_aid_access")
     private val CURRENT_CONTEXT_KEY = stringPreferencesKey("current_context")
@@ -55,6 +58,10 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
     val conversationLimit: Flow<Int> = context.settingsDataStore.data.map { preferences ->
         preferences[CONVERSATION_LIMIT_KEY] ?: 100
     }
+
+    val triageEnabled: Flow<Boolean> = context.settingsDataStore.data.map { it[TRIAGE_ENABLED_KEY] ?: false }
+    val firstAidEnabled: Flow<Boolean> = context.settingsDataStore.data.map { it[FIRST_AID_ENABLED_KEY] ?: false }
+    val contextEnabled: Flow<Boolean> = context.settingsDataStore.data.map { it[CONTEXT_ENABLED_KEY] ?: false }
 
     val triage: Flow<Map<String, String>> = context.settingsDataStore.data.map { preferences ->
         val jsonString = preferences[TRIAGE_KEY] ?: "{}"
@@ -77,6 +84,18 @@ class SettingsDataStore @Inject constructor(@ApplicationContext private val cont
         context.settingsDataStore.edit { settings ->
             settings[CONVERSATION_LIMIT_KEY] = limit
         }
+    }
+
+    suspend fun setTriageEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[TRIAGE_ENABLED_KEY] = enabled }
+    }
+
+    suspend fun setFirstAidEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[FIRST_AID_ENABLED_KEY] = enabled }
+    }
+
+    suspend fun setContextEnabled(enabled: Boolean) {
+        context.settingsDataStore.edit { it[CONTEXT_ENABLED_KEY] = enabled }
     }
 
     suspend fun setTriage(triageMap: Map<String, String>) {

@@ -5,6 +5,7 @@ import androidx.core.net.toUri
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import java.nio.ByteBuffer
 
 object AppTypeConverters {
 
@@ -55,4 +56,20 @@ object AppTypeConverters {
         return Gson().fromJson(json, object : TypeToken<Map<String, Any>>() {}.type)
     }
 
+    @TypeConverter
+    fun fromFloatArray(array: FloatArray): ByteArray {
+        val buffer = ByteBuffer.allocate(4 * array.size)
+        array.forEach { buffer.putFloat(it) }
+        return buffer.array()
+    }
+
+    @TypeConverter
+    fun toFloatArray(bytes: ByteArray): FloatArray {
+        val buffer = ByteBuffer.wrap(bytes)
+        val floatArray = FloatArray(bytes.size / 4)
+        for (i in floatArray.indices) {
+            floatArray[i] = buffer.getFloat()
+        }
+        return floatArray
+    }
 }

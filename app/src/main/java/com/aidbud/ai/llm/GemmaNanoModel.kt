@@ -1,68 +1,31 @@
-import MimeType
+package com.aidbud.ai.llm
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.util.Log
-import com.google.common.util.concurrent.ListenableFuture
 import com.google.mediapipe.framework.image.BitmapImageBuilder
 import com.google.mediapipe.tasks.genai.llminference.GraphOptions
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
 import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession
 import com.google.mediapipe.tasks.genai.llminference.LlmInferenceSession.LlmInferenceSessionOptions
 import com.google.mediapipe.tasks.genai.llminference.ProgressListener
-import com.google.ai.edge.localagents.rag.chains.ChainConfig
-import com.google.ai.edge.localagents.rag.chains.RetrievalAndInferenceChain
-import com.google.ai.edge.localagents.rag.memory.DefaultSemanticTextMemory
-import com.google.ai.edge.localagents.rag.memory.SqliteVectorStore
-import com.google.ai.edge.localagents.rag.models.AsyncProgressListener
 import com.google.ai.edge.localagents.rag.models.Embedder
 import com.google.ai.edge.localagents.rag.models.GeckoEmbeddingModel
-import com.google.ai.edge.localagents.rag.models.LanguageModelResponse
-import com.google.ai.edge.localagents.rag.models.MediaPipeLlmBackend
-import com.google.mediapipe.tasks.genai.llminference.LlmInference.LlmInferenceOptions
-import com.google.ai.edge.localagents.rag.prompt.PromptBuilder
-import com.google.ai.edge.localagents.rag.retrieval.RetrievalConfig
-import com.google.ai.edge.localagents.rag.retrieval.RetrievalConfig.TaskType
-import com.google.ai.edge.localagents.rag.retrieval.RetrievalRequest
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.util.concurrent.Executors
-import kotlinx.coroutines.coroutineScope
 import java.util.Optional
-import kotlin.jvm.optionals.getOrNull
-import java.util.concurrent.ConcurrentHashMap
-import android.database.sqlite.SQLiteDatabase
-import android.database.sqlite.SQLiteOpenHelper
-import com.google.common.util.concurrent.FutureCallback
-import android.content.ContentValues
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.collections.contains
-import kotlin.math.max
-import org.json.JSONObject
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.guava.await
 
-import com.aidbud.ai.ModelResponse
-import com.aidbud.ai.ModelResponseParser
-import com.aidbud.data.viewmodel.repo.AidBudRepository
-import com.google.common.util.concurrent.Futures
-import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
-import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlin.coroutines.resume
 
 val MAX_IMAGES = 64
 var MAX_TOKENS = 2048
@@ -80,18 +43,9 @@ class ModelLoadFailException :
 class ModelSessionCreateFailException :
     Exception("Failed to create model session, please try again")
 
-/**
- * A service class to handle interactions with an on-device Large Language Model
- * using the MediaPipe LlmInference task. This version is updated to correctly
- * handle multimodal inputs (text, image, video) using LlmInferenceSession.
- *
- * @param context The application context, needed for accessing assets and services.
- */
-class GemmaNanoModel @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val repository: AidBudRepository
+class GemmaNanoModel(
+    private val context: Context
 ) {
-
     private var llmInference: LlmInference? = null
     private var llmInferenceSession: LlmInferenceSession? = null
     private var inferenceOptions = LlmInference.LlmInferenceOptions.builder()
@@ -143,78 +97,14 @@ class GemmaNanoModel @Inject constructor(
         }
     }
 
-    fun initialiseRAG(
-        conversationId: Long
-    ): DefaultSemanticTextMemory {
-        return DefaultSemanticTextMemory(SqliteVectorStore(768, "rag_$conversationId.db"), embedder)
-    }
-
-    suspend fun runRAG(conversationId: Long, query: String, timeoutMillis: Long = 5000L): List<String>? {
-        return withContext(Dispatchers.IO) {
-            val config = RetrievalConfig.create(3, 0.5f, TaskType.RETRIEVAL_QUERY)
-            val request = RetrievalRequest.create(query, config)
-            val conversation = repository.getConversationById(conversationId).first()
-                ?: throw IllegalArgumentException("Conversation not found for id $conversationId")
-
-            val semanticMemory = conversation.semanticMemory
-                ?: throw IllegalStateException("SemanticMemory is null for conversation $conversationId")
-
-            val future = semanticMemory.retrieveResults(request)
-            val response = withTimeoutOrNull(timeoutMillis) { future.await() }
-
-            response?.entities?.map { it.data }
-        }
-    }
-
-    suspend fun insertRAG(conversationId: Long, data: String, timeoutMillis: Long = 5000L): Boolean? {
-        return withContext(Dispatchers.IO) {
-            val conversation = repository.getConversationById(conversationId).first()
-                ?: throw IllegalArgumentException("Conversation not found for id $conversationId")
-
-            val semanticMemory = conversation.semanticMemory
-                ?: throw IllegalStateException("SemanticMemory is null for conversation $conversationId")
-            val future = semanticMemory.recordMemoryItem(data)
-
-            val result = withTimeoutOrNull(timeoutMillis) {
-                future.await()
-            }
-            result
-        }
-    }
-
-    fun promptBuild(
-        query: String,
-        attachmentContext: String? = null,
-        ragContext: List<String> = emptyList()
-    ) {
-
-    }
-
-    fun chat(
-        conversationId: Long,
-        query: String,
-        attachments: List<Uri> = emptyList()
-    ) {
-
-    }
-
-//    fun estimateTokensRemaining(prompt: String): Int {
-//        val context = uiState.messages.joinToString { it.rawMessage } + prompt
-//        if (context.isEmpty()) return -1 // Specia marker if no content has been added
-//
-//        val sizeOfAllMessages = llmInferenceSession.sizeInTokens(context)
-//        val approximateControlTokens = uiState.messages.size * 3
-//        val remainingTokens = MAX_TOKENS - sizeOfAllMessages - approximateControlTokens -  DECODE_TOKEN_OFFSET
-//        // Token size is approximate so, let's not return anything below 0
-//        return max(0, remainingTokens)
-//    }
-
+    @OptIn(DelicateCoroutinesApi::class)
     fun generateResponse(
         prompt: String,
         attachments: List<Uri> = emptyList()
     ): Flow<String> {
 
         return callbackFlow {
+            val response = StringBuilder()
             val job = launch(Dispatchers.IO) {
                 // Define session options, enabling the vision modality.
                 val sessionOptions = LlmInferenceSession.LlmInferenceSessionOptions.builder()
@@ -235,47 +125,57 @@ class GemmaNanoModel @Inject constructor(
                         llmInferenceSession!!.addImage(mpImage)
                     }
 
-
                     val progressListener = ProgressListener<String> { partialResult, done ->
-                        trySend(partialResult)
-                        if (done) close()
+                        // Check if the flow is still active before processing results
+                        if (!isClosedForSend) {
+                            response.append(partialResult)
+                            if (done) {
+                                // When done, emit the complete string and close the flow
+                                trySend(response.toString())
+                                close() // Signal that the flow has completed successfully
+                            }
+                        } else {
+                            // If the flow is closed (e.g., cancelled by consumer),
+                            // attempt to cancel the underlying LLM operation.
+                            Log.d(TAG, "Flow cancelled, attempting to stop LLM generation.")
+                            llmInferenceSession?.cancelGenerateResponseAsync()
+                        }
                     }
 
                     // 5. Start the asynchronous generation process on the session.
                     llmInferenceSession!!.generateResponseAsync(progressListener)
-                    llmInferenceSession!!.close()
 
                 } catch (e: Exception) {
                     Log.e(TAG, "Error during session creation or generation", e)
                     close(e)
-                } finally {
-                    try {
-                        llmInferenceSession!!.close()
-                        llmInferenceSession = null
-                    } catch (closeError: Exception) {
-                        Log.w(TAG, "Error while closing session", closeError)
-                    }
                 }
             }
 
             awaitClose {
-                job.cancel()
+                Log.d(TAG, "Flow awaitClose triggered. Cancelling LLM job and closing session.")
+                job.cancel() // Cancel the coroutine job that started the LLM operation
+                try {
+                    llmInferenceSession?.cancelGenerateResponseAsync() // Attempt to cancel the LLM operation
+                    llmInferenceSession?.close() // Close the LLM session
+                    llmInferenceSession = null
+                } catch (closeError: Exception) {
+                    Log.w(TAG, "Error while closing LLM session during awaitClose", closeError)
+                }
             }
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun generateResponsePCard(
         prompt: String,
         attachments: List<Uri> = emptyList()
     ): Flow<ModelResponse> {
-        val startToken = "[PCARD]"
-        val endToken   = "[PCARD]"
-        val buffer = StringBuilder()
-
         return callbackFlow {
             val parser = ModelResponseParser { modelResponse ->
                 // The parser will call this lambda for each complete response part
-                trySend(modelResponse)
+                if (!isClosedForSend) {
+                    trySend(modelResponse)
+                }
             }
 
             val job = launch(Dispatchers.IO) {
@@ -300,35 +200,45 @@ class GemmaNanoModel @Inject constructor(
 
 
                     val listener = ProgressListener<String> { partialResult, done ->
-                        // Feed the token to the parser
-                        parser.processToken(partialResult)
+                        // Check if the flow is still active before processing results
+                        if (!isClosedForSend) {
+                            // Feed the token to the parser
+                            parser.processToken(partialResult)
 
-                        if (done) {
-                            // 3. Flush any remaining content and close the flow
-                            parser.completed()
-                            close()
+                            if (done) {
+                                // Flush any remaining content and close the flow
+                                parser.complete()
+                                parser.reset()
+                                close() // Signal that the flow has completed successfully
+                            }
+                        } else {
+                            // If the flow is closed (e.g., cancelled by consumer),
+                            // attempt to cancel the underlying LLM operation.
+                            Log.d(TAG, "Flow cancelled, attempting to stop LLM generation.")
+                            llmInferenceSession?.cancelGenerateResponseAsync()
                         }
                     }
 
                     // 5. Start the asynchronous generation process on the session.
                     llmInferenceSession!!.generateResponseAsync(listener)
-                    llmInferenceSession!!.close()
 
                 } catch (e: Exception) {
                     Log.e(TAG, "Error during session creation or generation", e)
-                    close(e)
-                } finally {
-                    try {
-                        llmInferenceSession!!.close()
-                        llmInferenceSession = null
-                    } catch (closeError: Exception) {
-                        Log.w(TAG, "Error while closing session", closeError)
-                    }
+                    close(e) // Close the flow with the exception
                 }
+                // Removed the 'finally' block as cleanup is handled in awaitClose
             }
 
             awaitClose {
-                job.cancel()
+                Log.d(TAG, "Flow awaitClose triggered. Cancelling LLM job and closing session.")
+                job.cancel() // Cancel the coroutine job that started the LLM operation
+                try {
+                    llmInferenceSession?.cancelGenerateResponseAsync() // Attempt to cancel the LLM operation
+                    llmInferenceSession?.close() // Close the LLM session
+                    llmInferenceSession = null // Nullify the session reference
+                } catch (closeError: Exception) {
+                    Log.w(TAG, "Error while closing LLM session during awaitClose", closeError)
+                }
             }
         }
     }

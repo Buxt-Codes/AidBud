@@ -33,7 +33,7 @@ data class RagData(
     val attachments: List<Uri>?,
 
     @ColumnInfo(name = "embedding")
-    val embedding: List<Float>,
+    val embedding: FloatArray,
 
     @ColumnInfo(name = "last_updated")
     val lastUpdated: Long

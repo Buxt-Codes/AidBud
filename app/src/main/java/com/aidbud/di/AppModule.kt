@@ -6,6 +6,7 @@ import com.aidbud.data.AppDatabase
 import com.aidbud.data.conversation.ConversationDao
 import com.aidbud.data.message.MessageDao
 import com.aidbud.data.pcard.PCardDao
+import com.aidbud.data.ragdata.RagDataDao
 import com.aidbud.data.viewmodel.repo.AidBudRepository
 import com.aidbud.data.settings.SettingsDataStore // Import the new SettingsDataStore class
 import dagger.Module
@@ -45,13 +46,19 @@ object AppModule {
     }
 
     @Provides
+    fun provideRagDataDao(database: AppDatabase): RagDataDao {
+        return database.ragDataDao()
+    }
+
+    @Provides
     @Singleton
     fun provideAidBudRepository(
         conversationDao: ConversationDao,
         messageDao: MessageDao,
-        pCardDao: PCardDao
+        pCardDao: PCardDao,
+        ragDataDao: RagDataDao
     ): AidBudRepository {
-        return AidBudRepository(conversationDao, messageDao, pCardDao)
+        return AidBudRepository(conversationDao, messageDao, pCardDao, ragDataDao)
     }
 
     // Provide SettingsDataStore as a singleton
