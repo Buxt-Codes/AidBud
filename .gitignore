@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+/app/src/main/assets/embedder/
+/app/src/main/assets/tokeniser/
+/app/src/main/assets/vosk/
