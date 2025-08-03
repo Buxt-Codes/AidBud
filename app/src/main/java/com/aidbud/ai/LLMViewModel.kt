@@ -9,6 +9,7 @@ import com.aidbud.ai.llm.ModelResponse
 import com.aidbud.ai.prompt.PromptBuilder
 import com.aidbud.ai.rag.RagPipeline
 import com.aidbud.ai.vosk.VideoTranscriber
+import com.aidbud.data.message.Message
 import com.aidbud.data.ragdata.RagData
 import com.aidbud.data.settings.SettingsViewModel
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,8 @@ class LLMViewModel @Inject constructor(
     val currentState: StateFlow<ModelResponse> = _currentState.asStateFlow()
     private var currentJob: Job? = null
     private var responseJob: Job? = null
+    private var conversationId: Long? = null
+    private var query: String? = null
 
     suspend fun transcribe(
         attachments: List<Uri>
@@ -156,6 +159,8 @@ class LLMViewModel @Inject constructor(
         conversationId: Long
     ) {
         cancel()
+        this.query = query
+        this.conversationId = conversationId
         _currentState.update { it.copy(isLoading = true, errorMessage = null, isCompleted = false) }
         currentJob = CoroutineScope(Dispatchers.Main).launch {
             try {
@@ -172,7 +177,11 @@ class LLMViewModel @Inject constructor(
                         ragAttachment
                     )
                 }
+
+
+
             } catch (e: Exception) {
+                cancel()
                 Log.e(TAG, "Error: $e", e)
                 _currentState.update {
                     it.copy(
@@ -182,6 +191,46 @@ class LLMViewModel @Inject constructor(
                     )
                 }
             }
+
+            if (_currentState.value.generatedText != "") {
+                repository.insertMessage(
+                    Message(
+                        conversationId = conversationId,
+                        timestamp = System.currentTimeMillis(),
+                        role = "LLM",
+                        text = _currentState.value.generatedText,
+                        attachments = null,
+                        pCardChanges = _currentState.value.pCardData
+                    )
+                )
+
+                val currentConversation = repository.getConversationById(conversationId).first()
+                if (currentConversation != null) {
+                    repository.updateConversation(currentConversation.copy(lastUpdated = System.currentTimeMillis()))
+                }
+
+                rag.insertData(
+                    data = mapOf(
+                        "query" to query,
+                        "response" to _currentState.value.generatedText,
+                        "pCardChanges" to (_currentState.value.pCardData?.toString() ?: "")
+                    ),
+                    attachments = emptyList(),
+                    conversationId = conversationId
+                )
+            }
+
+            _currentState.update { it.copy(
+                generatedText = "",
+                pCardData = null,
+                isPCardActive = false,
+                functionData = null,
+                isFunctionCall = false,
+                isLoading = true,
+                errorMessage = null,
+                isCompleted = false)
+            }
+
         }
     }
 
@@ -219,7 +268,8 @@ class LLMViewModel @Inject constructor(
                             isLoading = true,
                             generatedText = modelResponse.generatedText,
                             pCardData = modelResponse.pCardData,
-                            isPCardActive = modelResponse.isPCardActive
+                            isPCardActive = modelResponse.isPCardActive,
+                            isFunctionCall = modelResponse.isFunctionCall
                         )
                     }
                 }
@@ -268,58 +318,61 @@ class LLMViewModel @Inject constructor(
                 )
 
                 var pcardupdate = false
-                llm.generateResponsePCard(prompt).collect { modelResponse ->
-                    if (modelResponse.pCardData != null && !pcardupdate) {
-                        pcardupdate = true
+                responseJob = CoroutineScope(Dispatchers.Main).launch {
+                    llm.generateResponsePCard(prompt).collect { modelResponse ->
+                        if (modelResponse.pCardData != null && !pcardupdate) {
+                            pcardupdate = true
 
-                        val triageLevel = modelResponse.pCardData.optString("triage_level", null)
-                        val injuryIdentification = modelResponse.pCardData.optString("injury_identification", null)
-                        val identifiedInjuryDescription = modelResponse.pCardData.optString("identified_injury_description", null)
-                        val patientInjuryDescription = modelResponse.pCardData.optString("patient_injury_description", null)
-                        val interventionPlan = modelResponse.pCardData.optString("intervention_plan", null)
-                        val currentPCard = repository.getPCardsForConversation(conversationId).firstOrNull()?.firstOrNull()
-                        if (currentPCard != null) {
-                            repository.updatePCard(
-                                currentPCard.copy(
-                                    triageLevel = triageLevel ?: currentPCard.triageLevel,
-                                    injuryIdentification = injuryIdentification ?: currentPCard.injuryIdentification,
-                                    identifiedInjuryDescription = identifiedInjuryDescription ?: currentPCard.identifiedInjuryDescription,
-                                    patientInjuryDescription = patientInjuryDescription ?: currentPCard.patientInjuryDescription,
-                                    interventionPlan = interventionPlan ?: currentPCard.interventionPlan
+                            val triageLevel = modelResponse.pCardData.optString("triage_level", null)
+                            val injuryIdentification = modelResponse.pCardData.optString("injury_identification", null)
+                            val identifiedInjuryDescription = modelResponse.pCardData.optString("identified_injury_description", null)
+                            val patientInjuryDescription = modelResponse.pCardData.optString("patient_injury_description", null)
+                            val interventionPlan = modelResponse.pCardData.optString("intervention_plan", null)
+                            val currentPCard = repository.getPCardsForConversation(conversationId).firstOrNull()?.firstOrNull()
+                            if (currentPCard != null) {
+                                repository.updatePCard(
+                                    currentPCard.copy(
+                                        triageLevel = triageLevel ?: currentPCard.triageLevel,
+                                        injuryIdentification = injuryIdentification ?: currentPCard.injuryIdentification,
+                                        identifiedInjuryDescription = identifiedInjuryDescription ?: currentPCard.identifiedInjuryDescription,
+                                        patientInjuryDescription = patientInjuryDescription ?: currentPCard.patientInjuryDescription,
+                                        interventionPlan = interventionPlan ?: currentPCard.interventionPlan
+                                    )
                                 )
-                            )
-                        } else {
-                            repository.insertPCard(
-                                PCard(
-                                    conversationId = conversationId,
-                                    timestamp = System.currentTimeMillis(),
-                                    triageLevel = triageLevel,
-                                    injuryIdentification = injuryIdentification,
-                                    identifiedInjuryDescription = identifiedInjuryDescription,
-                                    patientInjuryDescription = patientInjuryDescription,
-                                    interventionPlan = interventionPlan
+                            } else {
+                                repository.insertPCard(
+                                    PCard(
+                                        conversationId = conversationId,
+                                        timestamp = System.currentTimeMillis(),
+                                        triageLevel = triageLevel,
+                                        injuryIdentification = injuryIdentification,
+                                        identifiedInjuryDescription = identifiedInjuryDescription,
+                                        patientInjuryDescription = patientInjuryDescription,
+                                        interventionPlan = interventionPlan
+                                    )
                                 )
+                            }
+
+                            val attachmentNewDescription = functionData.optString("new_attachment_description", null)
+                            if (attachmentNewDescription != null) {
+                                val updatedData = attachmentRagData.data.toMutableMap()
+                                updatedData["description"] = attachmentNewDescription
+                                rag.updateData(
+                                    attachmentRagId,
+                                    updatedData
+                                )
+                            }
+
+                        }
+                        _currentState.update {
+                            it.copy(
+                                isLoading = true,
+                                generatedText = modelResponse.generatedText,
+                                pCardData = modelResponse.pCardData,
+                                isPCardActive = modelResponse.isPCardActive,
+                                isFunctionCall = false
                             )
                         }
-
-                        val attachmentNewDescription = functionData.optString("new_attachment_description", null)
-                        if (attachmentNewDescription != null) {
-                            val updatedData = attachmentRagData.data.toMutableMap()
-                            updatedData["description"] = attachmentNewDescription
-                            rag.updateData(
-                                attachmentRagId,
-                                updatedData
-                            )
-                        }
-
-                    }
-                    _currentState.update {
-                        it.copy(
-                            isLoading = true,
-                            generatedText = modelResponse.generatedText,
-                            pCardData = modelResponse.pCardData,
-                            isPCardActive = modelResponse.isPCardActive
-                        )
                     }
                 }
 
@@ -413,6 +466,50 @@ class LLMViewModel @Inject constructor(
                     errorMessage = "Generation cancelled by user."
                 )
             }
+        }
+
+        if (_currentState.value.generatedText != "" && conversationId != null && query != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                repository.insertMessage(
+                    Message(
+                        conversationId = conversationId!!,
+                        timestamp = System.currentTimeMillis(),
+                        role = "LLM",
+                        text = _currentState.value.generatedText,
+                        attachments = null,
+                        pCardChanges = _currentState.value.pCardData
+                    )
+                )
+
+                val currentConversation = repository.getConversationById(conversationId!!).first()
+                if (currentConversation != null) {
+                    repository.updateConversation(currentConversation.copy(lastUpdated = System.currentTimeMillis()))
+                }
+
+                rag.insertData(
+                    data = mapOf(
+                        "query" to query!!,
+                        "response" to _currentState.value.generatedText,
+                        "pCardChanges" to (_currentState.value.pCardData?.toString() ?: "")
+                    ),
+                    attachments = emptyList(),
+                    conversationId = conversationId!!
+                )
+            }
+
+            conversationId = null
+            query = null
+        }
+
+        _currentState.update { it.copy(
+            generatedText = "",
+            pCardData = null,
+            isPCardActive = false,
+            functionData = null,
+            isFunctionCall = false,
+            isLoading = true,
+            errorMessage = null,
+            isCompleted = false)
         }
     }
 }

@@ -24,7 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 fun ChatInputBox(
     text: String,
     onTextChange: (String) -> Unit,
-    onDraftUpdate: (String) -> Unit,
     onSendClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -56,7 +55,6 @@ fun ChatInputBox(
                 onValueChange = {
                     if (it.length <= 3000) {
                         onTextChange(it)
-                        onDraftUpdate(it)
                     }
                 },
                 textStyle = TextStyle(color = Color.Black),
@@ -97,7 +95,6 @@ fun ChatInputBoxPreview() {
             ChatInputBox(
                 text = text,
                 onTextChange = { newText -> text = newText },
-                onDraftUpdate = { /* Do something with draft */ },
                 onSendClick = { /* Handle send */ }
             )
         }

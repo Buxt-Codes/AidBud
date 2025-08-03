@@ -11,7 +11,7 @@ data class Conversation(
     val conversationId: Long = 0, // Default value for auto-generation
 
     @ColumnInfo(name = "title")
-    val title: String,
+    val title: String = "AidBud",
 
     // lastUpdated will be set programmatically before insertion/update
     @ColumnInfo(name = "last_updated")

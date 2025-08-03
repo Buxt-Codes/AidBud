@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aidbud.ai.LLMViewModel
+import com.aidbud.ai.llm.ModelResponse
 import com.aidbud.data.conversation.Conversation
 import com.aidbud.data.message.Message
 import com.aidbud.data.pcard.PCard
@@ -35,11 +36,7 @@ class MainViewModel @Inject constructor(
     private val llm: LLMViewModel
 ) : ViewModel() {
 
-    // --- LLM Streaming State ---
-    // MutableSharedFlow to emit real-time updates from the LLM inference.
-    // This is a "hot" flow, suitable for events and streaming data.
-    private val _llmResponseStream = MutableSharedFlow<LLMResponseState>()
-    val llmResponseStream: SharedFlow<LLMResponseState> = _llmResponseStream
+    val llmState: StateFlow<ModelResponse> = llm.currentState
 
     val conversationLimit: StateFlow<Int> = settingsDataStore.conversationLimit
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 100)
@@ -130,7 +127,7 @@ class MainViewModel @Inject constructor(
         role: String,
         text: String?,
         attachments: List<Uri>? = null,
-        pCardChanges: String? = null
+        pCardChanges: JSONObject? = null
     ) {
         viewModelScope.launch {
             val message = Message(
@@ -269,6 +266,16 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun runLLM(
+        query: String,
+        attachments: List<Uri> = emptyList(),
+        conversationId: Long
+    ) {
+        llm.run(query, attachments, conversationId)
+    }
 
+    fun cancelLLM() {
+        llm.cancel()
+    }
 
 }

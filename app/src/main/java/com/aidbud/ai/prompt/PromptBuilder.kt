@@ -164,7 +164,7 @@ class PromptBuilder (
                         append("attachments: true\n")
                     }
                 }
-                if (!m.pCardChanges.isNullOrBlank()) {
+                if (m.pCardChanges != null) {
                     append("PCardChanges: ${m.pCardChanges}\n")
                 }
                 append("\n")
@@ -355,7 +355,7 @@ class PromptBuilder (
                         append("attachments: true\n")
                     }
                 }
-                if (!m.pCardChanges.isNullOrBlank()) {
+                if (m.pCardChanges != null) {
                     append("PCardChanges: ${m.pCardChanges}\n")
                 }
                 append("\n")
@@ -523,7 +523,7 @@ class PromptBuilder (
                         append("attachments: true\n")
                     }
                 }
-                if (!m.pCardChanges.isNullOrBlank()) {
+                if (m.pCardChanges != null) {
                     append("PCardChanges: ${m.pCardChanges}\n")
                 }
                 append("\n")

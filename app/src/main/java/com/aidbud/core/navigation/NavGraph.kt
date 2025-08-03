@@ -12,6 +12,8 @@ import com.aidbud.data.cache.draftmessage.GlobalCacheViewModel
 import com.aidbud.data.settings.SettingsViewModel
 import com.aidbud.ui.pages.camera.CameraPage
 import com.aidbud.data.viewmodel.MainViewModel // Corrected import for AidBudViewModel
+import com.aidbud.ui.pages.chat.ChatPage
+import com.aidbud.ui.pages.pcard.PCardPage
 import kotlinx.coroutines.launch
 
 /**
@@ -70,26 +72,38 @@ fun AppNavHost(
                 cacheViewModel = cacheViewModel
             )
         }
-        // If you want to add other screens later, you'd add more composable blocks here:
-        // composable("conversation_list") {
-        //     ConversationListScreen(
-        //         navController = navController,
-        //         viewModel = aidBudViewModel,
-        //         settingsViewModel = settingsViewModel,
-        //         cacheViewModel = cacheViewModel
-        //     )
-        // }
-        // composable(
-        //     "chat_screen/{conversationId}",
-        //     arguments = listOf(navArgument("conversationId") { type = NavType.LongType })
-        // ) { backStackEntry ->
-        //     val conversationId = backStackEntry.arguments?.getLong("conversationId") ?: -1L
-        //     ChatScreen(
-        //         conversationId = conversationId,
-        //         navController = navController,
-        //         viewModel = aidBudViewModel,
-        //         cacheViewModel = cacheViewModel
-        //     )
-        // }
+
+        composable(
+            "chat_page/{conversationId}",
+            arguments = listOf(navArgument("conversationId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val conversationId = backStackEntry.arguments?.getLong("conversationId") ?: -1L
+            cacheViewModel.setCurrentConversationId(conversationId)
+            // Call the ChatPage composable with all required dependencies
+            ChatPage(
+                conversationId = conversationId,
+                navController = navController,
+                viewModel = aidBudViewModel,
+                settingsViewModel = settingsViewModel,
+                cacheViewModel = cacheViewModel
+            )
+        }
+
+        composable(
+            "pcard_page/{conversationId}",
+            arguments = listOf(navArgument("conversationId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val conversationId = backStackEntry.arguments?.getLong("conversationId") ?: -1L
+            cacheViewModel.setCurrentConversationId(conversationId)
+            // Call the PCardPage composable with all required dependencies
+            PCardPage(
+                conversationId = conversationId,
+                navController = navController,
+                viewModel = aidBudViewModel,
+                settingsViewModel = settingsViewModel,
+                cacheViewModel = cacheViewModel
+            )
+        }
+
     }
 }

@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.aidbud.data.conversation.Conversation // Import the Conversation entity
+import org.json.JSONObject
 
 @Entity(
     tableName = "messages",
@@ -41,5 +42,5 @@ data class Message(
 
     // "Input changes" and "Output changes" can be stored as JSON strings if they are structured data
     @ColumnInfo(name = "pcard_changes")
-    val pCardChanges: String?, // Optional
+    val pCardChanges: JSONObject?, // Optional
 )

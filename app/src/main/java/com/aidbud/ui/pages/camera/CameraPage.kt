@@ -85,9 +85,6 @@ fun CameraPage(
     // Compose will automatically recompose when `cacheViewModel.drafts` changes for this conversationId.
     val currentDraft by remember(conversationId) { // Re-evaluate only if conversationId changes
         derivedStateOf {
-            // This lambda will be re-executed if cacheViewModel.drafts changes
-            // or if any observable property (like attachments.size or totalVideoDurationMillis)
-            // within the DraftMessage at this conversationId key changes.
             cacheViewModel.drafts[conversationId] ?: DraftMessage()
         }
     }
@@ -226,7 +223,7 @@ fun CameraPage(
                             if (conversationId != -1L) {
                                 viewModel.insertMessage(
                                     conversationId = conversationId,
-                                    role = "user",
+                                    role = "USER",
                                     text = currentDraft.text.ifBlank { null },
                                     attachments = currentDraft.attachments.ifEmpty { null }
                                 )

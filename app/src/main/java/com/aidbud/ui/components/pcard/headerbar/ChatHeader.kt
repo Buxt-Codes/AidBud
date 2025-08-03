@@ -1,4 +1,4 @@
-package com.aidbud.ui.components.chat.headerbar
+package com.aidbud.ui.components.pcard.headerbar
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi

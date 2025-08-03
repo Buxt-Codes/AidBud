@@ -19,7 +19,6 @@ fun InputBar(
     onDeleteAttachment: (Uri) -> Unit,
     text: String,
     onTextChange: (String) -> Unit,
-    onDraftUpdate: (String) -> Unit,
     onSendClick: () -> Unit,
     onPlusClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -70,7 +69,6 @@ fun InputBar(
                 ChatInputBox(
                     text = text,
                     onTextChange = onTextChange,
-                    onDraftUpdate = onDraftUpdate,
                     onSendClick = onSendClick,
                     modifier = Modifier.weight(1f)
                 )
@@ -97,7 +95,6 @@ fun PreviewInputBarWithAttachments() {
         onDeleteAttachment = { /* no-op for preview */ },
         text = text,
         onTextChange = { text = it },
-        onDraftUpdate = { /* no-op for preview */ },
         onSendClick = { /* no-op for preview */ },
         onPlusClick = { /* no-op for preview */ }
     )

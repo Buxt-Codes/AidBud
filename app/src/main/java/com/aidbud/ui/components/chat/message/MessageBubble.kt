@@ -54,8 +54,9 @@ fun MessageBox(
     role: MessageRole,
     text: String,
     attachments: List<Uri>? = null,
-    isStreaming: Boolean = false,
-    isEditingDocument: Boolean = false, // This flag now controls the visibility of the editing indicator
+    isLoading: Boolean = false,
+    isLoadingText: String = "",
+    error: String? = null
 ) {
     val backgroundColor: Color
     val alignment: Alignment
@@ -81,7 +82,7 @@ fun MessageBox(
 
     // Animate alpha for the "Editing document..." text
     val animatedEditingAlpha by animateFloatAsState(
-        targetValue = if (isEditingDocument) 1f else 0f, // Fade in/out
+        targetValue = if (isLoading) 1f else 0f, // Fade in/out
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 800), // Pulse duration
             repeatMode = RepeatMode.Reverse // Fade in and out
@@ -139,7 +140,7 @@ fun MessageBox(
                 // Animated Editing Indicator for LLM, appears BELOW the text
                 if (role == MessageRole.LLM) { // Only show editing indicator for LLM messages
                     AnimatedVisibility(
-                        visible = isEditingDocument,
+                        visible = isLoading,
                         enter = fadeIn(animationSpec = tween(durationMillis = 300)), // Entry animation
                         exit = fadeOut(animationSpec = tween(durationMillis = 300)) // Exit animation
                     ) {
@@ -153,7 +154,7 @@ fun MessageBox(
                             contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
-                                text = "Editing document...",
+                                text = isLoadingText,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = animatedEditingAlpha) // Apply animated alpha to text
                             )

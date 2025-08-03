@@ -5,6 +5,7 @@ import androidx.core.net.toUri
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import org.json.JSONObject
 import java.nio.ByteBuffer
 
 object AppTypeConverters {
@@ -71,5 +72,19 @@ object AppTypeConverters {
             floatArray[i] = buffer.getFloat()
         }
         return floatArray
+    }
+
+    @TypeConverter
+    fun fromJSONObject(jsonObject: JSONObject?): String? {
+        return jsonObject?.toString()
+    }
+
+    @TypeConverter
+    fun toJSONObject(jsonString: String?): JSONObject? {
+        return try {
+            if (jsonString.isNullOrEmpty()) null else JSONObject(jsonString)
+        } catch (e: Exception) {
+            null
+        }
     }
 }
