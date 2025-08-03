@@ -15,6 +15,7 @@ import com.aidbud.data.settings.SettingsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import com.aidbud.data.pcard.PCard
+import com.aidbud.data.settings.SettingsDataStore
 
 import com.aidbud.data.viewmodel.repo.AidBudRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -33,7 +34,7 @@ import java.io.IOException
 class LLMViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val repository: AidBudRepository,
-    private val settings: SettingsViewModel
+    private val settings: SettingsDataStore
 ) {
     private val llm = GemmaNanoModel(context)
     private val rag = RagPipeline(context, repository)

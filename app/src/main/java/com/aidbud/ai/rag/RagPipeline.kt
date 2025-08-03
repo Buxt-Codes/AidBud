@@ -12,6 +12,8 @@ import com.google.mediapipe.tasks.components.containers.Embedding
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Optional
 
 val BACKEND_GPU = false
@@ -32,11 +34,29 @@ class RagPipeline(
         initialise()
     }
 
+    fun copyAsset(
+        context: Context,
+        assetPath: String,
+        destFileName: String
+    ): File {
+        val file = File(context.filesDir, destFileName)
+        if (!file.exists()) {
+            context.assets.open(assetPath).use { input ->
+                FileOutputStream(file).use { output ->
+                    input.copyTo(output)
+                }
+            }
+        }
+        return file
+    }
+
     fun initialise() {
         try {
+            val embedderFile = copyAsset(context, EMBEDDER_MODEL_PATH, "Gecko_1024_quant.tflite")
+            val tokeniserFile = copyAsset(context, TOKENISER_MODEL_PATH, "sentencepiece.model")
             textEmbedder = GeckoEmbedder(
-                EMBEDDER_MODEL_PATH,
-                Optional.of(TOKENISER_MODEL_PATH),
+                embedderFile.absolutePath,
+                Optional.of(tokeniserFile.absolutePath),
                 BACKEND_GPU
             )
         } catch (e: Exception) {

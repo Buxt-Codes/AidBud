@@ -15,7 +15,7 @@ import javax.inject.Singleton
  * ViewModel for managing application settings.
  * It injects SettingsDataStore to interact with persistent settings.
  */
-@Singleton
+@HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsDataStore: SettingsDataStore // Inject the DataStore class
 ) : ViewModel() {

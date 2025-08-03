@@ -7,6 +7,8 @@ import com.aidbud.data.ragdata.RagData
 import com.aidbud.data.settings.SettingsViewModel
 import kotlinx.coroutines.flow.first
 import com.aidbud.data.settings.CurrentContext
+import com.aidbud.data.settings.SettingsDataStore
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 
 val MAX_QUERY_PROMPT_CHARACTERS = 24000
@@ -15,7 +17,7 @@ val MAX_ATTACHMENT_PROMPT_CHARACTERS = 12000
 class PromptBuilder (
     private val context: Context,
     private val repository: AidBudRepository,
-    private val settings: SettingsViewModel
+    private val settings: SettingsDataStore
 ) {
     private val templates: MutableMap<String, String> = mutableMapOf()
 
@@ -42,7 +44,7 @@ class PromptBuilder (
         ragText: List<RagData> = emptyList(),
         ragAttachment: List<RagData> = emptyList()
     ): String {
-        val promptTemplate = if (settings.triageEnabled.value) {
+        val promptTemplate = if (settings.triageEnabled.first()) {
             templates["TriagePrompt"]!!
         } else {
             templates["NonTriagePrompt"]!!
@@ -52,20 +54,20 @@ class PromptBuilder (
         val firstAidAccessSection = StringBuilder()
         val currentContextSection = StringBuilder()
 
-        if (settings.triageEnabled.value && settings.triage.value.isNotEmpty()) {
+        if (settings.triageEnabled.first() && settings.triage.first().isNotEmpty()) {
             val triageSectionContext = """
                 Here is the context for deciding on the appropriate Triaging Level for the patient.
                 You should explain how you managed to select the level of Triaging in your response to the user.
             """.trimIndent()
             triageSection.appendLine(triageSectionContext)
             triageSection.appendLine("## Triage Priority Levels:")
-            settings.triage.value.forEach { (level, description) ->
+            settings.triage.first().forEach { (level, description) ->
                 triageSection.appendLine("- $level: $description")
             }
             triageSection.appendLine()
         }
 
-        if (settings.firstAidEnabled.value) {
+        if (settings.firstAidEnabled.first()) {
             val firstAidSectionContext = """
                 Here is the context for deciding on the appropriate Intervention Plan for the patient given the current First Aid Availability. 
                 Where IMMEDIATE is available, NON_IMMEDIATE signifies that it's not conveniently obtainable and NO ACCESS means that no First Aid is available. 
@@ -73,12 +75,12 @@ class PromptBuilder (
             """.trimIndent()
             triageSection.appendLine(firstAidSectionContext)
             firstAidAccessSection.appendLine("## First aid access level:")
-            firstAidAccessSection.appendLine(settings.firstAidAccess.value.name)
+            firstAidAccessSection.appendLine(settings.firstAidAccess.first().name)
             firstAidAccessSection.appendLine()
         }
 
-        if (settings.contextEnabled.value) {
-            val (context, customText) = settings.currentContext.value
+        if (settings.contextEnabled.first()) {
+            val (context, customText) = settings.currentContext.first()
             val contextText = if (context == CurrentContext.CUSTOM) {
                 customText ?: "Custom Context"
             } else {
@@ -98,7 +100,7 @@ class PromptBuilder (
         val pCard = repository.getPCardsForConversation(conversationId).firstOrNull()?.firstOrNull()
         val pCardDetails = pCard?.let {
             buildString {
-                if (settings.triageEnabled.value) {
+                if (settings.triageEnabled.first()) {
                     appendLine("Triage Level: ${if (it.triageLevel.isNullOrBlank()) "null" else it.triageLevel}")
                 }
                 appendLine("Injury Identification: ${if (it.injuryIdentification.isNullOrBlank()) "null" else it.injuryIdentification}")
@@ -227,7 +229,7 @@ class PromptBuilder (
         ragText: List<RagData> = emptyList(),
         ragAttachment: List<RagData> = emptyList()
     ): String {
-        val promptTemplate = if (settings.triageEnabled.value) {
+        val promptTemplate = if (settings.triageEnabled.first()) {
             templates["TriageFunctionPrompt"]!!
         } else {
             templates["NonTriageFunctionPrompt"]!!
@@ -237,20 +239,20 @@ class PromptBuilder (
         val firstAidAccessSection = StringBuilder()
         val currentContextSection = StringBuilder()
 
-        if (settings.triageEnabled.value && settings.triage.value.isNotEmpty()) {
+        if (settings.triageEnabled.first() && settings.triage.first().isNotEmpty()) {
             val triageSectionContext = """
                 Here is the context for deciding on the appropriate Triaging Level for the patient.
                 You should explain how you managed to select the level of Triaging in your response to the user.
             """.trimIndent()
             triageSection.appendLine(triageSectionContext)
             triageSection.appendLine("## Triage Priority Levels:")
-            settings.triage.value.forEach { (level, description) ->
+            settings.triage.first().forEach { (level, description) ->
                 triageSection.appendLine("- $level: $description")
             }
             triageSection.appendLine()
         }
 
-        if (settings.firstAidEnabled.value) {
+        if (settings.firstAidEnabled.first()) {
             val firstAidSectionContext = """
                 Here is the context for deciding on the appropriate Intervention Plan for the patient given the current First Aid Availability. 
                 Where IMMEDIATE is available, NON_IMMEDIATE signifies that it's not conveniently obtainable and NO ACCESS means that no First Aid is available. 
@@ -258,12 +260,12 @@ class PromptBuilder (
             """.trimIndent()
             triageSection.appendLine(firstAidSectionContext)
             firstAidAccessSection.appendLine("## First aid access level:")
-            firstAidAccessSection.appendLine(settings.firstAidAccess.value.name)
+            firstAidAccessSection.appendLine(settings.firstAidAccess.first().name)
             firstAidAccessSection.appendLine()
         }
 
-        if (settings.contextEnabled.value) {
-            val (context, customText) = settings.currentContext.value
+        if (settings.contextEnabled.first()) {
+            val (context, customText) = settings.currentContext.first()
             val contextText = if (context == CurrentContext.CUSTOM) {
                 customText ?: "Custom Context"
             } else {
@@ -283,7 +285,7 @@ class PromptBuilder (
         val pCard = repository.getPCardsForConversation(conversationId).firstOrNull()?.firstOrNull()
         val pCardDetails = pCard?.let {
             buildString {
-                if (settings.triageEnabled.value) {
+                if (settings.triageEnabled.first()) {
                     appendLine("Triage Level: ${if (it.triageLevel.isNullOrBlank()) "null" else it.triageLevel}")
                 }
                 appendLine("Injury Identification: ${if (it.injuryIdentification.isNullOrBlank()) "null" else it.injuryIdentification}")
@@ -415,7 +417,7 @@ class PromptBuilder (
         ragText: List<RagData> = emptyList(),
         ragAttachment: List<RagData> = emptyList()
     ): String {
-        val promptTemplate = if (settings.triageEnabled.value) {
+        val promptTemplate = if (settings.triageEnabled.first()) {
             templates["TriageFunctionQueryPrompt"]!!
         } else {
             templates["NonTriageFunctionQueryPrompt"]!!
@@ -425,20 +427,20 @@ class PromptBuilder (
         val firstAidAccessSection = StringBuilder()
         val currentContextSection = StringBuilder()
 
-        if (settings.triageEnabled.value && settings.triage.value.isNotEmpty()) {
+        if (settings.triageEnabled.first() && settings.triage.first().isNotEmpty()) {
             val triageSectionContext = """
                 Here is the context for deciding on the appropriate Triaging Level for the patient.
                 You should explain how you managed to select the level of Triaging in your response to the user.
             """.trimIndent()
             triageSection.appendLine(triageSectionContext)
             triageSection.appendLine("## Triage Priority Levels:")
-            settings.triage.value.forEach { (level, description) ->
+            settings.triage.first().forEach { (level, description) ->
                 triageSection.appendLine("- $level: $description")
             }
             triageSection.appendLine()
         }
 
-        if (settings.firstAidEnabled.value) {
+        if (settings.firstAidEnabled.first()) {
             val firstAidSectionContext = """
                 Here is the context for deciding on the appropriate Intervention Plan for the patient given the current First Aid Availability. 
                 Where IMMEDIATE is available, NON_IMMEDIATE signifies that it's not conveniently obtainable and NO ACCESS means that no First Aid is available. 
@@ -446,12 +448,12 @@ class PromptBuilder (
             """.trimIndent()
             triageSection.appendLine(firstAidSectionContext)
             firstAidAccessSection.appendLine("## First aid access level:")
-            firstAidAccessSection.appendLine(settings.firstAidAccess.value.name)
+            firstAidAccessSection.appendLine(settings.firstAidAccess.first().name)
             firstAidAccessSection.appendLine()
         }
 
-        if (settings.contextEnabled.value) {
-            val (context, customText) = settings.currentContext.value
+        if (settings.contextEnabled.first()) {
+            val (context, customText) = settings.currentContext.first()
             val contextText = if (context == CurrentContext.CUSTOM) {
                 customText ?: "Custom Context"
             } else {
@@ -471,7 +473,7 @@ class PromptBuilder (
         val pCard = repository.getPCardsForConversation(conversationId).firstOrNull()?.firstOrNull()
         val pCardDetails = pCard?.let {
             buildString {
-                if (settings.triageEnabled.value) {
+                if (settings.triageEnabled.first()) {
                     appendLine("Triage Level: ${if (it.triageLevel.isNullOrBlank()) "null" else it.triageLevel}")
                 }
                 appendLine("Injury Identification: ${if (it.injuryIdentification.isNullOrBlank()) "null" else it.injuryIdentification}")
