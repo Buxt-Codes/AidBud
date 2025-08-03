@@ -22,13 +22,13 @@ class PromptBuilder (
     private val templates: MutableMap<String, String> = mutableMapOf()
 
     init {
-        loadTemplate("TriageFunctionQueryPrompt", "xxx")
-        loadTemplate("NonTriageFunctionQueryPrompt", "xxx")
-        loadTemplate("TriageFunctionPrompt", "xxx")
-        loadTemplate("NonTriageFunctionPrompt", "xxx")
-        loadTemplate("TriagePrompt", "xxx")
-        loadTemplate("NonTriagePrompt", "xxx")
-        loadTemplate("AttachmentProcessing", "xx")
+        loadTemplate("TriageFunctionQueryPrompt", "TriageFunctionQueryPrompt.txt")
+        loadTemplate("NonTriageFunctionQueryPrompt", "NonTriageFunctionQueryPrompt.txt")
+        loadTemplate("TriageFunctionPrompt", "TriageFunctionPrompt.txt")
+        loadTemplate("NonTriageFunctionPrompt", "NonTriageFunctionPrompt.txt")
+        loadTemplate("TriagePrompt", "TriagePrompt.txt")
+        loadTemplate("NonTriagePrompt", "NonTriagePrompt.txt")
+        loadTemplate("AttachmentProcessing", "AttachmentProcessing.txt")
     }
 
     private fun loadTemplate(name: String, assetFileName: String) {

@@ -92,7 +92,7 @@ fun HeaderBar(
 
             // Right: Chat Button
             ChatButton(
-                onClick = { navController.navigate("chat/$conversationId") },
+                onClick = { navController.navigate("chat_page/$conversationId") },
                 iconSize = 20.dp, // Use default or customize
                 modifier = Modifier.offset(x = -buttonOffset) // Apply offset to move button right (negative of left offset)
             )
