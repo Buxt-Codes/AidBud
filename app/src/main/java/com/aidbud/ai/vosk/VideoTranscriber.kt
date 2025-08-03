@@ -107,7 +107,7 @@ class VideoTranscriber(private val context: Context, private val modelPath: Stri
      */
     private fun performTranscription(pcmData: ByteArray, model: Model): String? {
         val recognizer = Recognizer(model, TARGET_SAMPLE_RATE.toFloat()).apply {
-            setWords(true)
+            // setWords(true)
         }
 
         try {
