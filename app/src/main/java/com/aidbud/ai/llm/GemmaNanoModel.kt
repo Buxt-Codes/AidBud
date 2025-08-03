@@ -25,16 +25,12 @@ import kotlinx.coroutines.withContext
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.*
+import java.io.File
 import kotlin.coroutines.resume
 
 val MAX_IMAGES = 64
 var MAX_TOKENS = 2048
-
-var DECODE_TOKEN_OFFSET = 256
-var MODEL_PATH = ""
 var FRAMES_PER_SECOND = 1
-var GECKO_MODEL_PATH = ""
-var TOKENIZER_MODEL_PATH = ""
 
 
 class ModelLoadFailException :
@@ -49,7 +45,7 @@ class GemmaNanoModel(
     private var llmInference: LlmInference? = null
     private var llmInferenceSession: LlmInferenceSession? = null
     private var inferenceOptions = LlmInference.LlmInferenceOptions.builder()
-        .setModelPath(MODEL_PATH)
+        .setModelPath("${context.filesDir}/gemma3n4b-aidbud.task")
         .setMaxTokens(MAX_TOKENS)
         .setMaxNumImages(MAX_IMAGES)
         .setPreferredBackend(LlmInference.Backend.CPU)
@@ -60,15 +56,6 @@ class GemmaNanoModel(
         .setTopP(0.95f)
         .setGraphOptions(GraphOptions.builder().setEnableVisionModality(true).build())
         .build()
-
-    private val embedder: Embedder<String> = GeckoEmbeddingModel(
-            GECKO_MODEL_PATH,
-            Optional.of(TOKENIZER_MODEL_PATH),
-            false,
-        )
-
-    private val managerScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-    private var currentChatOperationJob: Job? = null
 
     companion object {
         private const val TAG = "GemmaNanoModel"
