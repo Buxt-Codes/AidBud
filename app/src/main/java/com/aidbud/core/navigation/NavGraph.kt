@@ -1,8 +1,16 @@
 package com.aidbud.core.navigation
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -13,6 +21,7 @@ import com.aidbud.data.settings.SettingsViewModel
 import com.aidbud.ui.pages.camera.CameraPage
 import com.aidbud.data.viewmodel.MainViewModel // Corrected import for AidBudViewModel
 import com.aidbud.ui.pages.chat.ChatPage
+import com.aidbud.ui.pages.loading.LoadingPage
 import com.aidbud.ui.pages.pcard.PCardPage
 import kotlinx.coroutines.launch
 
@@ -35,29 +44,37 @@ fun AppNavHost(
     val coroutineScope = rememberCoroutineScope()
 
     // Set "initial_setup" as the starting destination
-    NavHost(navController = navController, startDestination = "initial_setup") {
+    NavHost(navController = navController, startDestination = "loading_page") {
 
-        // This composable handles the initial setup logic (creating a new conversation)
+        composable("loading_page") {
+            LoadingPage(
+                navController = navController,
+                viewModel = aidBudViewModel
+            )
+        }
+
         composable("initial_setup") {
-            LaunchedEffect(Unit) { // This effect runs only once when the composable enters composition
+            // Show a loading spinner or splash screen here while the conversation is being created
+            Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Initializing app...",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        color = Color.Gray
+                    )
+                )
+            }
+            LaunchedEffect(Unit) {
                 coroutineScope.launch {
-                    // Create a new conversation and get its ID
                     val newConversationId = aidBudViewModel.insertConversation("New Conversation")
-
-                    // Navigate to the camera_screen, passing the new conversation ID
-                    // popUpTo ensures that 'initial_setup' is removed from the back stack,
-                    // so pressing back from CameraPage won't go back to this setup screen.
-                    navController.navigate("camera_screen/$newConversationId") {
+                    navController.navigate("camera_page/$newConversationId") {
                         popUpTo("initial_setup") { inclusive = true }
                     }
                 }
             }
-            // You can show a loading spinner or splash screen here while the conversation is being created
-            // Text("Initializing app...")
         }
 
         composable(
-            "camera_screen/{conversationId}", // Define argument in the route
+            "camera_page/{conversationId}", // Define argument in the route
             arguments = listOf(navArgument("conversationId") { type = NavType.LongType })
         ) { backStackEntry ->
             // Extract the conversationId from the navigation arguments

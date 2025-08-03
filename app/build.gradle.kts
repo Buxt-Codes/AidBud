@@ -103,6 +103,7 @@ dependencies {
     implementation(libs.kotlinx.guava)
     implementation(libs.jna)
     implementation(libs.vosk.android)
+    implementation(libs.okhttp)
 
     // Tests
     testImplementation(libs.junit)

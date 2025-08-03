@@ -82,7 +82,11 @@ fun HeaderBar(
             // Middle: Animated Page Title Box
             PCardTitle(
                 title = title,
-                onClick = { /* TODO: Implement send action */ },
+                onClick = {
+                    navController.navigate("pcard_page/$conversationId") {
+                        popUpTo("camera_page/{conversationId}") { inclusive = true }
+                    }
+                },
                 modifier = Modifier.weight(1f), // Take up remaining space
             )
 

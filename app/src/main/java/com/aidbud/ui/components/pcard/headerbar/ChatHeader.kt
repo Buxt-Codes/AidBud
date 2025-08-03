@@ -81,14 +81,22 @@ fun HeaderBar(
                 ) {
                     PCardTitle(
                         title = title,
-                        onClick = { /* TODO: Implement title click action */ }
+                        onClick = {
+                            navController.navigate("chat_page/$conversationId") {
+                                popUpTo("pcard_page/{conversationId}") { inclusive = true }
+                            }
+                        }
                     )
                 }
 
                 // Right: Chat Button
                 CameraButton(
                     // onClick = { navController.navigate("chat/$conversationId") }, // Uncomment in actual code
-                    onClick = { /* Dummy navigation for preview */ println("Navigate to chat/$conversationId") },
+                    onClick = {
+                        navController.navigate("camera_page/$conversationId") {
+                            popUpTo("pcard_page/{conversationId}") { inclusive = true }
+                        }
+                    },
                     iconSize = 20.dp,
                     // No need for .offset or .align here
                 )
